@@ -1,345 +1,1473 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DoCA - National Legal Metrology Monitoring Portal</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
-        
-        body { 
-            background-color: #0B1120; 
-            color: #f8fafc; 
-            font-family: 'Inter', sans-serif;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
-            background-attachment: fixed;
-        }
-        h1, h2, h3, .font-display { font-family: 'Space Grotesk', sans-serif; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        
-        .glass-card {
-            background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-        }
-        
-        .metric-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .metric-card:hover {
-            transform: translateY(-4px) scale(1.01);
-            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-        
-        /* Custom scrollbar for the table */
-        .table-container::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        .table-container::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.5); 
-            border-radius: 4px;
-        }
-        .table-container::-webkit-scrollbar-thumb {
-            background: #334155; 
-            border-radius: 4px;
-            border: 2px solid rgba(15, 23, 42, 0.5);
-        }
-        .table-container::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MetrologyLens AI — National Legal Metrology Monitoring Portal</title>
+  <meta name="description" content="Prototype national monitoring dashboard for packaged-commodity legal metrology compliance — Team InsightX." />
 
-        .row-enter { animation: rowIn 0.4s cubic-bezier(0.34, 1.35, 0.64, 1) forwards; }
-        @keyframes rowIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: none; }
-        }
-        
-        .pulse-ring {
-            position: relative;
-        }
-        .pulse-ring::before {
-            content: '';
-            position: absolute;
-            inset: -4px;
-            border-radius: 50%;
-            background: rgba(16, 185, 129, 0.4);
-            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes pulse-ring {
-            0% { transform: scale(0.8); opacity: 1; }
-            100% { transform: scale(2); opacity: 0; }
-        }
-    </style>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind (layout utilities) + Chart.js + Lucide icons, all via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ["Inter", "sans-serif"] } } } };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
+
+  <style>
+:root {
+  --bg:#f3f6f8; --bg-2:#ffffff; --surface:#ffffff; --surface-2:#f8fafc; --surface-3:#eef3f6;
+  --navy:#12304a; --navy-2:#0b4260; --teal:#087f8c; --teal-2:#0f9da5;
+  --neon:#168b72; --cyan:#087f8c; --amber:#b87916; --danger:#c43d4b; --success:#168b72; --purple:#536b9b;
+  --ink:#193247; --ink-2:#536a78; --ink-3:#728591; --hair:#d9e3e8; --hair-2:#c5d4dc;
+  --grid:rgba(18,48,74,.035); --radius:14px; --ease-clay:cubic-bezier(.34,1.35,.64,1);
+  --neon-rgb:22,139,114; --cyan-rgb:8,127,140; --danger-rgb:196,61,75; --amber-rgb:184,121,22; --purple-rgb:83,107,155;
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth;scroll-padding-top:92px} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden}
+.font-display{font-family:"Space Grotesk","Inter",sans-serif}.mono{font-family:"JetBrains Mono",ui-monospace,monospace}::selection{background:rgba(var(--cyan-rgb),.18);color:var(--navy)}
+*::-webkit-scrollbar{width:9px;height:9px}*::-webkit-scrollbar-track{background:var(--bg)}*::-webkit-scrollbar-thumb{background:#c8d5dc;border:2px solid var(--bg);border-radius:10px}
+.bg-layer{position:fixed;inset:0;pointer-events:none;z-index:0}.bg-grid{background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:52px 52px;mask-image:linear-gradient(#000,transparent 88%)}.bg-glow,.bg-scan,.bg-vignette{display:none}
+.clay{position:relative;background:var(--surface);border:1px solid var(--hair);border-radius:var(--radius);box-shadow:0 8px 24px rgba(22,52,71,.07),0 1px 2px rgba(22,52,71,.04)}.clay-inset{background:var(--surface-2);border:1px solid var(--hair);border-radius:10px;box-shadow:inset 0 1px 3px rgba(28,58,77,.04)}
+.neon-edge::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;border:1px solid rgba(var(--cyan-rgb),.18)}
+.accent-cyan{--acc:var(--cyan);--acc-rgb:var(--cyan-rgb)}.accent-neon{--acc:var(--success);--acc-rgb:var(--neon-rgb)}.accent-danger{--acc:var(--danger);--acc-rgb:var(--danger-rgb)}.accent-amber{--acc:var(--amber);--acc-rgb:var(--amber-rgb)}.accent-purple{--acc:var(--purple);--acc-rgb:var(--purple-rgb)}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}.section-title{font-family:"Space Grotesk",sans-serif;font-weight:700;letter-spacing:.01em;color:var(--navy)}.text-muted{color:var(--ink-2)}.text-dim{color:var(--ink-3)}.text-neon{color:var(--success)}.text-cyan{color:var(--teal)}.text-danger{color:var(--danger)}.text-amber{color:var(--amber)}.text-purple{color:var(--purple)}
+.gradient-text{background:linear-gradient(100deg,var(--navy),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent}
+.term-chip{display:inline-flex;align-items:center;gap:.48rem;font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:.38rem .7rem;border-radius:999px;background:#f1f6f8;border:1px solid var(--hair);color:var(--ink-2)}.dot{width:8px;height:8px;border-radius:50%;background:var(--success)}.dot-pulse{box-shadow:0 0 0 0 rgba(var(--neon-rgb),.25);animation:dotPulse 2.6s infinite}@keyframes dotPulse{70%{box-shadow:0 0 0 6px rgba(var(--neon-rgb),0)}100%{box-shadow:0 0 0 0 rgba(var(--neon-rgb),0)}}
+.badge{display:inline-flex;align-items:center;gap:.35rem;font-family:"JetBrains Mono",monospace;font-weight:700;font-size:.68rem;letter-spacing:.04em;padding:.3rem .58rem;border-radius:999px;white-space:nowrap}.badge svg{width:13px;height:13px}.badge-pass{color:var(--success);background:#e7f5f0;border:1px solid #b8e1d4}.badge-fail{color:var(--danger);background:#fff0f1;border:1px solid #efc6cb}
+.clay-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.035em;color:var(--navy);cursor:pointer;user-select:none;padding:.78rem 1.15rem;border-radius:10px;border:1px solid var(--hair-2);background:#fff;box-shadow:0 4px 10px rgba(20,55,73,.07);transition:transform .22s var(--ease-clay),box-shadow .22s ease,filter .22s ease}.clay-btn svg{width:17px;height:17px}.clay-btn:hover{transform:translateY(-3px) scale(1.02) rotate(-.35deg);box-shadow:0 9px 18px rgba(20,55,73,.12);filter:brightness(1.02)}.clay-btn:focus-visible,.clay-icon:focus-visible{outline:2px solid var(--teal-2);outline-offset:3px}.clay-btn:disabled,.clay-btn[aria-disabled="true"]{opacity:.5;cursor:not-allowed;transform:none;filter:none}.clay-btn.giggle{animation:giggle .42s var(--ease-clay)}@keyframes giggle{0%{transform:translateY(-3px) scale(1.02)}35%{transform:translateY(1px) scale(.96)}70%{transform:translateY(-2px) scale(1.01)}100%{transform:none}}.clay-btn--primary{color:#fff;background:linear-gradient(135deg,var(--navy),var(--navy-2));border-color:var(--navy)}.clay-btn--cyan{color:#fff;background:linear-gradient(135deg,var(--teal),var(--teal-2));border-color:var(--teal)}.clay-btn--danger{color:#fff;background:var(--danger);border-color:var(--danger)}.clay-btn--ghost{background:#fff;color:var(--navy)}.clay-btn--sm{padding:.48rem .78rem;font-size:.72rem;border-radius:8px}
+.clay-icon{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;cursor:pointer;color:var(--ink-2);border:1px solid var(--hair-2);background:#fff;box-shadow:0 3px 8px rgba(20,55,73,.06);transition:transform .22s var(--ease-clay),color .2s,box-shadow .2s}.clay-icon svg{width:18px;height:18px}.clay-icon:hover{transform:translateY(-2px) scale(1.02);color:var(--teal)}.clay-icon.giggle{animation:giggle .42s var(--ease-clay)}
+.nav{position:sticky;top:.65rem;z-index:60;margin:.65rem auto 0;width:min(1200px,calc(100% - 1.5rem));border-radius:12px;padding:.7rem 1rem;background:rgba(255,255,255,.96);border:1px solid var(--hair);box-shadow:0 8px 22px rgba(18,48,74,.1);backdrop-filter:blur(12px)}.emblem{width:44px;height:44px;border-radius:10px;flex:none;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,var(--navy),var(--teal));border:1px solid rgba(255,255,255,.18);box-shadow:0 5px 12px rgba(8,75,92,.18)}.emblem svg{width:24px;height:24px}.nav-link{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);padding:.45rem .7rem;border-radius:7px;transition:color .2s,background .2s;cursor:pointer}.nav-link:hover{color:var(--navy);background:#edf5f7}
+.switch{position:relative;display:inline-flex;align-items:center;cursor:pointer;gap:.55rem}.switch input{position:absolute;opacity:0;width:0;height:0}.switch .track{width:44px;height:24px;border-radius:999px;background:#dfe8ec;border:1px solid var(--hair-2);transition:background .3s;position:relative}.switch .thumb{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(18,48,74,.25);transition:transform .3s var(--ease-clay),background .3s}.switch input:checked+.track{background:#b9e5dc;border-color:#86cdbd}.switch input:checked+.track .thumb{transform:translateX(20px);background:var(--success)}.switch input:focus-visible+.track{outline:2px solid var(--teal-2);outline-offset:2px}.mobile-menu{display:none}
+.hero-title{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(2.1rem,5.4vw,4rem);line-height:1.02;letter-spacing:-.02em;color:var(--navy)}.scan-sweep{position:relative;overflow:hidden}.scan-sweep::before{display:none}.gauge{transform:rotate(-90deg)}.gauge-track{stroke:#e1ebee}.gauge-fill{stroke:url(#gaugeGrad);stroke-linecap:round;transition:stroke-dashoffset 1.1s var(--ease-clay)}.console-line{display:flex;justify-content:space-between;align-items:center;padding:.55rem 0;border-bottom:1px dashed var(--hair);font-family:"JetBrains Mono",monospace;font-size:.76rem}.console-line:last-child{border-bottom:none}
+.kpi{padding:1.25rem 1.3rem;overflow:hidden}.kpi .kpi-icon{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;color:var(--acc,var(--cyan));background:rgba(var(--acc-rgb,var(--cyan-rgb)),.1);border:1px solid rgba(var(--acc-rgb,var(--cyan-rgb)),.22)}.kpi .kpi-icon svg{width:21px;height:21px}.kpi-value{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:2.35rem;line-height:1;letter-spacing:-.02em;color:var(--navy)}.kpi::after{content:"";position:absolute;inset:0 0 auto 0;height:3px;border-radius:14px 14px 0 0;background:var(--acc,var(--cyan));opacity:.7}.hoverable{transition:transform .25s var(--ease-clay),box-shadow .25s ease}.hoverable:hover{transform:translateY(-4px);box-shadow:0 14px 28px rgba(18,48,74,.11)}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.1rem}.chart-wrap{position:relative}.doughnut-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none}.legend-row{display:flex;align-items:center;gap:.6rem;padding:.5rem 0}.legend-dot{width:11px;height:11px;border-radius:4px;flex:none}.feed-controls{display:flex;flex-wrap:wrap;gap:.65rem;align-items:center}.field{display:flex;align-items:center;gap:.5rem;padding:.52rem .72rem;border-radius:9px;background:#fff;border:1px solid var(--hair-2);color:var(--ink);box-shadow:0 2px 5px rgba(18,48,74,.04)}.field svg{width:16px;height:16px;color:var(--ink-3);flex:none}.field input,.field select{background:transparent;border:none;outline:none;color:var(--ink);font-family:"Inter",sans-serif;font-size:.84rem;width:100%}.field select{cursor:pointer}.field option{background:#fff;color:var(--ink)}.field:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(var(--cyan-rgb),.1)}.seg{display:inline-flex;padding:3px;gap:3px;border-radius:9px;background:#eef3f5;border:1px solid var(--hair)}.seg button{font-family:"JetBrains Mono",monospace;font-size:.68rem;letter-spacing:.05em;color:var(--ink-2);padding:.4rem .72rem;border-radius:7px;border:none;background:transparent;cursor:pointer;transition:color .2s,background .2s}.seg button.active{color:#fff;background:var(--teal);font-weight:700}.seg button:not(.active):hover{color:var(--navy);background:#fff}
+.table-scroll{overflow-x:auto;border-radius:10px}table.feed{width:100%;border-collapse:separate;border-spacing:0;min-width:860px}table.feed thead th{font-family:"JetBrains Mono",monospace;font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);text-align:left;font-weight:600;padding:.68rem .82rem;border-bottom:1px solid var(--hair-2);position:sticky;top:0;background:var(--surface-2);white-space:nowrap}table.feed tbody td{padding:.78rem .82rem;border-bottom:1px solid var(--hair);vertical-align:middle}table.feed tbody tr{transition:background .2s}table.feed tbody tr:hover{background:#f2f8f9}table.feed tbody tr:last-child td{border-bottom:none}.cell-id{font-family:"JetBrains Mono",monospace;color:var(--teal);font-weight:700;font-size:.78rem}.cell-mono{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--ink)}.cell-sub{color:var(--ink-3);font-size:.74rem}.row-actions{display:inline-flex;gap:.35rem}.row-enter{animation:rowIn .4s var(--ease-clay) both}@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.row-new{animation:rowNew 2s ease-out}@keyframes rowNew{0%{background:#e5f6f1;box-shadow:inset 3px 0 0 var(--success)}100%{background:transparent;box-shadow:inset 3px 0 0 transparent}}.feed-state{display:none;padding:3rem 1rem;text-align:center}.feed-state.show{display:block;animation:fadeIn .3s ease}.feed-state .glyph{width:62px;height:62px;margin:0 auto 1rem;border-radius:12px;display:grid;place-items:center;color:var(--ink-3);background:var(--surface-2);border:1px solid var(--hair)}.feed-state.error .glyph{color:var(--danger);border-color:#efc6cb}.feed-state .glyph svg{width:28px;height:28px}.offline-pill{display:none}.offline-pill.show{display:inline-flex}
+.modal-backdrop{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:1.2rem;background:rgba(18,48,74,.48);backdrop-filter:blur(4px)}.modal-backdrop.show{display:flex;animation:fadeIn .2s ease}.modal{width:min(680px,100%);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;transform:scale(.97);opacity:0;transition:transform .28s var(--ease-clay),opacity .2s ease}.modal-backdrop.show .modal{transform:scale(1);opacity:1}.modal-body{overflow-y:auto;padding:1.4rem}.detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}.detail{background:var(--surface-2);border:1px solid var(--hair);border-radius:10px;padding:.78rem .85rem}.detail .k{font-family:"JetBrains Mono",monospace;font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}.detail .v{font-family:"Space Grotesk",sans-serif;font-weight:600;margin-top:.2rem}.check-row{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.65rem .82rem;border-radius:9px;background:var(--surface-2);border:1px solid var(--hair);margin-bottom:.45rem}.check-row .label{display:flex;align-items:center;gap:.55rem;font-size:.86rem}.check-ic{width:25px;height:25px;border-radius:7px;display:grid;place-items:center;flex:none}.check-ic svg{width:14px;height:14px}.check-ic.pass{color:var(--success);background:#e7f5f0}.check-ic.fail{color:var(--danger);background:#fff0f1}.score-ring{transform:rotate(-90deg)}
+.vbar-track{height:10px;border-radius:999px;background:#edf2f4;border:1px solid var(--hair);overflow:hidden}.vbar-fill{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--amber),var(--danger));transition:width 1s var(--ease-clay)}.timeline{position:relative;padding-left:1.4rem}.timeline::before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:linear-gradient(var(--hair-2),transparent)}.tl-item{position:relative;padding:0 0 1.05rem .6rem}.tl-item:last-child{padding-bottom:0}.tl-dot{position:absolute;left:-1.4rem;top:4px;width:14px;height:14px;border-radius:50%;border:3px solid var(--surface);background:var(--teal)}.tl-dot.ok{background:var(--success)}.tl-dot.warn{background:var(--amber)}.tl-dot.bad{background:var(--danger)}.tl-dot.info{background:var(--cyan)}.tl-time{font-family:"JetBrains Mono",monospace;font-size:.68rem;color:var(--ink-3);letter-spacing:.05em}
+.toast-wrap{position:fixed;top:5.6rem;right:1.1rem;z-index:95;display:flex;flex-direction:column;gap:.6rem;width:min(340px,calc(100% - 2rem))}.toast{display:flex;gap:.7rem;align-items:flex-start;padding:.85rem .95rem;border-radius:10px;background:#fff;border:1px solid var(--hair);box-shadow:0 14px 28px rgba(18,48,74,.14);border-left:3px solid var(--acc,var(--cyan));animation:toastIn .32s var(--ease-clay)}.toast.leaving{animation:toastOut .28s ease forwards}.toast .t-ic{color:var(--acc,var(--cyan));margin-top:1px}.toast .t-ic svg{width:20px;height:20px}.toast .t-title{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:.88rem}.toast .t-msg{color:var(--ink-2);font-size:.8rem}@keyframes toastIn{from{opacity:0;transform:translateX(20px) scale(.98)}to{opacity:1;transform:none}}@keyframes toastOut{to{opacity:0;transform:translateX(20px)}}
+.loader{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#f3f6f8;transition:opacity .45s ease,visibility .45s}.loader.done{opacity:0;visibility:hidden;pointer-events:none}.loader-box{width:min(440px,90%);text-align:center}.loader-emblem{width:70px;height:70px;margin:0 auto 1.2rem}.loader-term{text-align:left;font-family:"JetBrains Mono",monospace;font-size:.78rem;margin:1.3rem 0}.loader-term div{color:var(--ink-3);opacity:0}.loader-term div.on{color:var(--teal);opacity:1;animation:fadeIn .25s ease}.loader-bar{height:5px;border-radius:999px;background:#dfe9ed;overflow:hidden}.loader-bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--navy),var(--teal));transition:width .3s ease}.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s var(--ease-clay)}.reveal.in{opacity:1;transform:none}@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media(max-width:767.98px){.nav-links,.nav-desktop{display:none}.mobile-menu-btn{display:inline-flex}.mobile-menu.open{display:block;animation:fadeIn .25s ease}.detail-grid{grid-template-columns:1fr}.toast-wrap{top:auto;bottom:1rem}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}.bg-grid{animation:none}}
+  </style>
 </head>
-<body class="min-h-screen font-sans flex flex-col">
 
-    <!-- Top Navigation Bar -->
-    <header class="glass-card sticky top-0 z-50 border-b border-slate-700 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center gap-4">
-                    <div class="bg-blue-600 p-2 rounded-lg">
-                        <i data-lucide="scale" class="text-white"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-bold text-white tracking-tight">National Legal Metrology Monitoring Portal</h1>
-                        <p class="text-xs text-slate-400">Department of Consumer Affairs (DoCA)</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700 shadow-inner">
-                        <div class="w-2 h-2 rounded-full bg-emerald-500 pulse-ring"></div>
-                        <span class="text-sm font-bold text-slate-300 tracking-wide">LIVE SYSTEM</span>
-                    </div>
-                    <span class="px-3 py-1.5 rounded-md bg-blue-500/10 text-blue-400 text-sm font-bold border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
-                        Team InsightX
-                    </span>
-                </div>
-            </div>
-        </div>
-    </header>
+<body>
+  <!-- SVG defs: emblem + gradients -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="emblem" viewBox="0 0 24 24">
+        <path d="M12 2l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V5l7-3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+        <line x1="12" y1="6.6" x2="12" y2="16.4" stroke="currentColor" stroke-width="1.1"/>
+        <line x1="7.4" y1="8.8" x2="16.6" y2="8.8" stroke="currentColor" stroke-width="1.1"/>
+        <path d="M7.4 8.8l-1.7 3.3h3.4z" fill="none" stroke="currentColor" stroke-width="1"/>
+        <path d="M16.6 8.8l-1.7 3.3h3.4z" fill="none" stroke="currentColor" stroke-width="1"/>
+        <line x1="9.6" y1="16.4" x2="14.4" y2="16.4" stroke="currentColor" stroke-width="1.1"/>
+      </symbol>
+      <linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#31f7a5"/>
+        <stop offset="100%" stop-color="#37d0f5"/>
+      </linearGradient>
+      <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#31f7a5"/>
+        <stop offset="100%" stop-color="#37d0f5"/>
+      </linearGradient>
+    </defs>
+  </svg>
 
-    <!-- Main Content -->
-    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        
-        <!-- Metric Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Card 1 -->
-            <div class="glass-card rounded-xl p-6 metric-card shadow-lg border-t-4 border-t-blue-500">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm font-medium text-slate-400">Total Inspections</p>
-                        <h3 class="text-3xl font-bold text-white mt-1" id="val-total">-</h3>
-                    </div>
-                    <div class="p-3 rounded-lg bg-blue-500/20">
-                        <i data-lucide="scan-line" class="text-blue-400"></i>
-                    </div>
-                </div>
-                <p class="text-xs text-slate-500 mt-4">Scanned by Field Officers Today</p>
+  <!-- Ambient background -->
+  <div class="bg-layer bg-grid"></div>
+  <div class="bg-layer bg-glow"></div>
+  <div class="bg-layer bg-scan"></div>
+  <div class="bg-layer bg-vignette"></div>
+
+  <!-- ============================ LOADING OVERLAY ============================ -->
+  <div class="loader" id="loader" role="status" aria-live="polite">
+    <div class="loader-box">
+      <div class="loader-emblem emblem" style="width:70px;height:70px">
+        <svg><use href="#emblem"/></svg>
+      </div>
+      <div class="font-display" style="font-weight:700;font-size:1.5rem;letter-spacing:0.02em">
+        METROLOGY<span class="gradient-text">LENS</span> AI
+      </div>
+      <div class="eyebrow" style="margin-top:0.4rem">National Legal Metrology Monitoring</div>
+
+      <div class="loader-term" id="loaderTerm">
+        <div data-line>&gt; SYSTEM INITIALIZING...</div>
+        <div data-line>&gt; CONNECTING TO MONITORING NETWORK...</div>
+        <div data-line>&gt; LOADING NATIONAL DATA...</div>
+        <div data-line>&gt; SYSTEM ONLINE</div>
+      </div>
+
+      <div class="loader-bar"><span id="loaderBar"></span></div>
+    </div>
+  </div>
+
+  <!-- ============================ TOASTS ============================ -->
+  <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- ============================ NAV ============================ -->
+  <header>
+    <nav class="nav" aria-label="Primary">
+      <div class="flex items-center justify-between gap-3">
+        <!-- Brand -->
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="emblem" aria-hidden="true"><svg><use href="#emblem"/></svg></span>
+          <div class="min-w-0">
+            <div class="font-display leading-none" style="font-weight:700;font-size:1.05rem;letter-spacing:0.03em">
+              METROLOGY<span class="text-neon">LENS</span> AI
             </div>
-            
-            <!-- Card 2 -->
-            <div class="glass-card rounded-xl p-6 metric-card shadow-lg border-t-4 border-t-emerald-500">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm font-medium text-slate-400">Compliant Packages</p>
-                        <h3 class="text-3xl font-bold text-emerald-400 mt-1" id="val-pass">-</h3>
-                    </div>
-                    <div class="p-3 rounded-lg bg-emerald-500/20">
-                        <i data-lucide="check-circle-2" class="text-emerald-400"></i>
-                    </div>
-                </div>
-                <p class="text-xs text-slate-500 mt-4">Fully LMPC 2011 Compliant</p>
-            </div>
-            
-            <!-- Card 3 -->
-            <div class="glass-card rounded-xl p-6 metric-card shadow-lg border-t-4 border-t-rose-500">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm font-medium text-slate-400">Total Violations Flagged</p>
-                        <h3 class="text-3xl font-bold text-rose-400 mt-1" id="val-fail">-</h3>
-                    </div>
-                    <div class="p-3 rounded-lg bg-rose-500/20">
-                        <i data-lucide="alert-triangle" class="text-rose-400"></i>
-                    </div>
-                </div>
-                <p class="text-xs text-slate-500 mt-4">Action Required Instantly</p>
-            </div>
-            
-            <!-- Card 4 -->
-            <div class="glass-card rounded-xl p-6 metric-card shadow-lg border-t-4 border-t-amber-500">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm font-medium text-slate-400">National Compliance Rate</p>
-                        <h3 class="text-3xl font-bold text-amber-400 mt-1" id="val-rate">-</h3>
-                    </div>
-                    <div class="p-3 rounded-lg bg-amber-500/20">
-                        <i data-lucide="pie-chart" class="text-amber-400"></i>
-                    </div>
-                </div>
-                <p class="text-xs text-slate-500 mt-4">Percentage of Compliant Scans</p>
-            </div>
+            <div class="eyebrow nav-desktop" style="margin-top:2px;font-size:0.62rem">National Legal Metrology Monitoring Portal</div>
+          </div>
         </div>
 
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
-            <!-- Left Side: Table (65%) -->
-            <div class="lg:col-span-8 glass-card rounded-xl shadow-lg flex flex-col h-[500px]">
-                <div class="p-6 border-b border-slate-700 flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i data-lucide="activity" class="w-5 h-5 text-blue-400"></i>
-                        Live Inspection Feed
-                    </h2>
-                    <span class="text-xs text-slate-400">Auto-updating every 3s</span>
-                </div>
-                <div class="p-0 flex-1 overflow-auto table-container">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-800/50 sticky top-0 z-10">
-                            <tr>
-                                <th class="py-4 px-6 text-xs font-semibold text-slate-300 uppercase tracking-wider">ID</th>
-                                <th class="py-4 px-6 text-xs font-semibold text-slate-300 uppercase tracking-wider">Product</th>
-                                <th class="py-4 px-6 text-xs font-semibold text-slate-300 uppercase tracking-wider">Net Qty</th>
-                                <th class="py-4 px-6 text-xs font-semibold text-slate-300 uppercase tracking-wider">MRP</th>
-                                <th class="py-4 px-6 text-xs font-semibold text-slate-300 uppercase tracking-wider">Status</th>
-                                <th class="py-4 px-6 text-xs font-semibold text-slate-300 uppercase tracking-wider text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body" class="divide-y divide-slate-700/50">
-                            <!-- Rows will be injected here via JS -->
-                            <tr>
-                                <td colspan="6" class="py-8 text-center text-slate-500">Loading live data...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- Right Side: Chart (35%) -->
-            <div class="lg:col-span-4 glass-card rounded-xl shadow-lg flex flex-col h-[500px]">
-                <div class="p-6 border-b border-slate-700">
-                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i data-lucide="donut" class="w-5 h-5 text-amber-400"></i>
-                        Compliance Analytics
-                    </h2>
-                </div>
-                <div class="p-6 flex-1 flex items-center justify-center relative">
-                    <canvas id="complianceChart"></canvas>
-                </div>
-            </div>
-
+        <!-- Desktop cluster -->
+        <div class="nav-links items-center gap-1 hidden md:flex">
+          <a class="nav-link" data-scroll="#overview">Overview</a>
+          <a class="nav-link" data-scroll="#analytics">Analytics</a>
+          <a class="nav-link" data-scroll="#feed">Feed</a>
+          <a class="nav-link" data-scroll="#intel">Intel</a>
         </div>
-    </main>
 
-    <script>
-        // Initialize Lucide Icons
-        lucide.createIcons();
+        <div class="nav-desktop items-center gap-2.5 hidden md:flex">
+          <span class="term-chip">Team InsightX</span>
+          <span class="term-chip" id="navStatus"><span class="dot dot-pulse"></span> System Online</span>
+          <label class="switch" title="Toggle live inspection simulation">
+            <input type="checkbox" id="liveToggle" />
+            <span class="track"><span class="thumb"></span></span>
+            <span class="eyebrow" style="font-size:0.62rem">Live Sim</span>
+          </label>
+        </div>
 
-        // Chart.js Setup
-        const ctx = document.getElementById('complianceChart').getContext('2d');
-        Chart.defaults.color = '#94a3b8';
-        Chart.defaults.font.family = "'Inter', sans-serif";
-        
-        let complianceChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Compliant (Pass)', 'Violations (Fail)'],
-                datasets: [{
-                    data: [1, 1], // Placeholder
-                    backgroundColor: ['#10b981', '#f43f5e'],
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' }
-                    }
-                }
-            }
-        });
+        <!-- Mobile toggle -->
+        <button class="clay-icon mobile-menu-btn md:hidden" id="menuBtn" aria-label="Open menu" aria-expanded="false">
+          <i data-lucide="menu"></i>
+        </button>
+      </div>
 
-        const API_URL = "http://127.0.0.1:8000";
+      <!-- Mobile menu -->
+      <div class="mobile-menu" id="mobileMenu">
+        <div class="flex flex-col gap-1 pt-3 mt-3" style="border-top:1px solid var(--hair)">
+          <a class="nav-link" data-scroll="#overview">Overview</a>
+          <a class="nav-link" data-scroll="#analytics">Analytics</a>
+          <a class="nav-link" data-scroll="#feed">Feed</a>
+          <a class="nav-link" data-scroll="#intel">Intel</a>
+          <div class="flex items-center justify-between pt-2">
+            <span class="term-chip"><span class="dot dot-pulse"></span> System Online</span>
+            <label class="switch">
+              <input type="checkbox" id="liveToggleMobile" />
+              <span class="track"><span class="thumb"></span></span>
+              <span class="eyebrow" style="font-size:0.62rem">Live</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
 
-        // Logic to fetch data and update UI
-        async function fetchAndUpdateDashboard() {
-            try {
-                const response = await fetch(`${API_URL}/api/history`);
-                if (!response.ok) throw new Error("Network error");
-                const data = await response.json();
-                
-                // Calculate Metrics
-                const total = data.length;
-                const pass = data.filter(d => d.status.toUpperCase() === 'PASS').length;
-                const fail = total - pass;
-                const rate = total === 0 ? 0 : Math.round((pass / total) * 100);
+  <main class="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 pb-20">
 
-                // Update Cards
-                document.getElementById('val-total').innerText = total;
-                document.getElementById('val-pass').innerText = pass;
-                document.getElementById('val-fail').innerText = fail;
-                document.getElementById('val-rate').innerText = `${rate}%`;
+    <!-- ============================ HERO ============================ -->
+    <section id="overview" class="pt-8 sm:pt-12">
+      <div class="grid lg:grid-cols-[1.15fr_0.85fr] gap-6 items-center">
+        <!-- Left: thesis -->
+        <div class="reveal">
+          <span class="term-chip mono"><span class="dot dot-pulse"></span> SYSTEM_STATUS: ONLINE</span>
+          <h1 class="hero-title mt-5">
+            NATIONAL LEGAL<br/>METROLOGY MONITORING
+            <span class="block gradient-text mt-1">METROLOGYLENS AI</span>
+          </h1>
+          <p class="text-muted mt-5 max-w-xl" style="font-size:1.02rem">
+            A live national view of packaged-commodity compliance. MetrologyLens AI verifies
+            mandatory declarations across field inspections — MRP, net quantity, manufacturer
+            and consumer-care details — and flags violations the moment they surface.
+          </p>
+          <div class="flex flex-wrap gap-3 mt-7">
+            <button class="clay-btn clay-btn--primary" data-scroll="#feed">
+              <i data-lucide="radio"></i> View Live Inspections
+            </button>
+            <button class="clay-btn clay-btn--ghost" data-scroll="#analytics">
+              <i data-lucide="line-chart"></i> Explore Analytics
+            </button>
+          </div>
+        </div>
 
-                // Update Chart
-                complianceChart.data.datasets[0].data = [pass, fail === 0 && pass === 0 ? 1 : fail];
-                complianceChart.update();
+        <!-- Right: national compliance console (signature moment) -->
+        <div class="reveal">
+          <div class="clay neon-edge scan-sweep p-6">
+            <div class="flex items-center justify-between mb-2">
+              <span class="eyebrow">National Compliance</span>
+              <span class="term-chip mono" style="font-size:0.62rem"><span class="dot"></span> LIVE</span>
+            </div>
+            <div class="flex items-center gap-5">
+              <div class="relative" style="width:150px;height:150px;flex:none">
+                <svg class="gauge" width="150" height="150" viewBox="0 0 150 150">
+                  <circle class="gauge-track" cx="75" cy="75" r="62" fill="none" stroke-width="12"/>
+                  <circle class="gauge-fill" id="heroGauge" cx="75" cy="75" r="62" fill="none" stroke-width="12"
+                          stroke-dasharray="389.6" stroke-dashoffset="389.6"/>
+                </svg>
+                <div class="doughnut-center">
+                  <div class="kpi-value font-display" id="heroGaugePct" style="font-size:2rem">0%</div>
+                  <div class="eyebrow" style="font-size:0.58rem">COMPLIANT</div>
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="console-line"><span class="text-dim">STATES MONITORED</span><span class="text-cyan" style="font-weight:700">28</span></div>
+                <div class="console-line"><span class="text-dim">ACTIVE INSPECTORS</span><span class="text-neon" style="font-weight:700">412</span></div>
+                <div class="console-line"><span class="text-dim">INSPECTIONS / 24H</span><span id="heroCount" style="font-weight:700">128</span></div>
+                <div class="console-line"><span class="text-dim">OPEN VIOLATIONS</span><span class="text-danger" style="font-weight:700">23</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-                // Update Table
-                const tbody = document.getElementById('table-body');
-                tbody.innerHTML = ''; // clear loading state
+    <!-- ============================ KPI CARDS ============================ -->
+    <section class="mt-10">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="kpiGrid"><!-- JS --></div>
+    </section>
 
-                if (total === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-500">No inspections logged yet.</td></tr>`;
-                    return;
-                }
+    <!-- ============================ ANALYTICS ============================ -->
+    <section id="analytics" class="mt-10">
+      <div class="grid lg:grid-cols-[1.55fr_1fr] gap-4">
+        <!-- Trend -->
+        <div class="clay p-5 sm:p-6 reveal">
+          <div class="panel-head">
+            <div>
+              <div class="eyebrow">Compliance Analytics</div>
+              <h2 class="section-title" style="font-size:1.25rem">National Compliance Trend</h2>
+            </div>
+            <span class="term-chip mono" style="font-size:0.62rem">7-DAY</span>
+          </div>
+          <div class="chart-wrap" style="height:280px"><canvas id="trendChart"></canvas></div>
+        </div>
 
-                data.forEach((row, index) => {
-                    const fields = row.extracted_fields || {};
-                    const isPass = row.status.toUpperCase() === 'PASS';
-                    const badgeClass = isPass 
-                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
-                        : 'bg-rose-500/20 text-rose-400 border-rose-500/30';
-                    const icon = isPass ? 'check-circle-2' : 'alert-circle';
-                    const statusText = isPass ? 'PASS' : 'FAIL';
-                    
-                    const mrp = fields.MRP || 'N/A';
-                    const qty = fields.Net_Quantity || 'N/A';
-                    const idShort = row.inspection_id.substring(0,6).toUpperCase();
+        <!-- Breakdown -->
+        <div class="clay p-5 sm:p-6 reveal">
+          <div class="panel-head">
+            <div>
+              <div class="eyebrow">Today</div>
+              <h2 class="section-title" style="font-size:1.25rem">Compliance Breakdown</h2>
+            </div>
+          </div>
+          <div class="chart-wrap mx-auto" style="height:210px;max-width:210px">
+            <canvas id="breakdownChart"></canvas>
+            <div class="doughnut-center">
+              <div class="kpi-value font-display" id="breakdownPct" style="font-size:2.1rem">82%</div>
+              <div class="eyebrow" style="font-size:0.58rem">COMPLIANT</div>
+            </div>
+          </div>
+          <div class="mt-4" id="breakdownLegend"><!-- JS --></div>
+        </div>
+      </div>
+    </section>
 
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-700/30 transition-colors row-enter";
-                    tr.style.animationDelay = `${index * 0.05}s`;
-                    tr.innerHTML = `
-                        <td class="py-4 px-6 text-sm font-mono text-slate-300">#${idShort}</td>
-                        <td class="py-4 px-6 text-sm text-white font-medium">Scanned Item</td>
-                        <td class="py-4 px-6 text-sm text-slate-400">${qty}</td>
-                        <td class="py-4 px-6 text-sm text-slate-400">${mrp}</td>
-                        <td class="py-4 px-6">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border ${badgeClass}">
-                                <i data-lucide="${icon}" class="w-3.5 h-3.5"></i>
-                                ${statusText}
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 text-right">
-                            <a href="${API_URL}/api/download-notice/${row.inspection_id}" target="_blank" class="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 transition-colors font-medium">
-                                <i data-lucide="file-text" class="w-4 h-4"></i>
-                                PDF
-                            </a>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-                
-                // Re-initialize icons for new rows
-                lucide.createIcons();
+    <!-- ============================ LIVE INSPECTION FEED ============================ -->
+    <section id="feed" class="mt-10">
+      <div class="clay p-5 sm:p-6 reveal">
+        <div class="panel-head" style="flex-wrap:wrap">
+          <div>
+            <div class="eyebrow">Field Operations</div>
+            <h2 class="section-title" style="font-size:1.35rem">Live Inspection Feed</h2>
+            <p class="text-dim" style="font-size:0.85rem">Latest field inspection activity</p>
+          </div>
+          <span class="term-chip offline-pill" id="offlinePill" style="border-color:rgba(255,184,56,0.4);color:var(--amber)">
+            <span class="dot" style="background:var(--amber)"></span> Offline · Live updates paused
+          </span>
+        </div>
 
-            } catch (error) {
-                console.error("Dashboard Auto-Refresh Failed:", error);
-            }
+        <!-- Controls -->
+        <div class="feed-controls mb-4">
+          <label class="field" style="flex:1 1 220px">
+            <i data-lucide="search"></i>
+            <input type="text" id="searchInput" placeholder="Search product, ID or location…" aria-label="Search inspections" />
+          </label>
+          <div class="seg" role="group" aria-label="Filter by status">
+            <button data-status="ALL" class="active">All</button>
+            <button data-status="PASS">Pass</button>
+            <button data-status="FAIL">Fail</button>
+          </div>
+          <label class="field" style="flex:0 1 190px">
+            <i data-lucide="map-pin"></i>
+            <select id="locationFilter" aria-label="Filter by location"><option value="ALL">All locations</option></select>
+          </label>
+          <button class="clay-btn clay-btn--cyan clay-btn--sm" id="refreshBtn">
+            <i data-lucide="refresh-cw"></i> Refresh
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-scroll">
+          <table class="feed" id="feedTable">
+            <thead>
+              <tr>
+                <th>ID</th><th>Product</th><th>Category</th><th>Net Quantity</th>
+                <th>MRP</th><th>Location</th><th>Status</th><th>Time</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="feedBody"><!-- JS --></tbody>
+          </table>
+        </div>
+
+        <!-- States -->
+        <div class="feed-state empty" id="feedEmpty">
+          <div class="glyph"><i data-lucide="search-x"></i></div>
+          <div class="section-title" style="font-size:1.05rem">No inspections found</div>
+          <p class="text-dim" style="font-size:0.86rem">No records match the current search or filters.</p>
+          <button class="clay-btn clay-btn--ghost clay-btn--sm mt-4" id="clearFilters"><i data-lucide="x"></i> Clear filters</button>
+        </div>
+        <div class="feed-state error" id="feedError">
+          <div class="glyph"><i data-lucide="wifi-off"></i></div>
+          <div class="section-title" style="font-size:1.05rem">Data stream interrupted</div>
+          <p class="text-dim" style="font-size:0.86rem">The monitoring network connection dropped. Retry to reconnect.</p>
+          <button class="clay-btn clay-btn--cyan clay-btn--sm mt-4" id="retryBtn"><i data-lucide="refresh-cw"></i> Retry</button>
+        </div>
+
+        <!-- Footer row -->
+        <div class="flex items-center justify-between mt-4 flex-wrap gap-3">
+          <span class="text-dim mono" style="font-size:0.76rem" id="feedCount">Showing 0 of 0</span>
+          <button class="clay-btn clay-btn--ghost clay-btn--sm" id="loadMoreBtn"><i data-lucide="chevron-down"></i> Load more</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ INTEL: VIOLATIONS + ACTIVITY ============================ -->
+    <section id="intel" class="mt-10">
+      <div class="grid lg:grid-cols-[1.3fr_1fr] gap-4">
+        <!-- Violation intelligence -->
+        <div class="clay p-5 sm:p-6 reveal">
+          <div class="panel-head">
+            <div>
+              <div class="eyebrow">Detection</div>
+              <h2 class="section-title" style="font-size:1.25rem">Violation Intelligence</h2>
+              <p class="text-dim" style="font-size:0.85rem">Most common compliance failures detected today</p>
+            </div>
+            <i data-lucide="scan-search" style="color:var(--danger)"></i>
+          </div>
+          <div id="violationList" class="mt-2"><!-- JS --></div>
+        </div>
+
+        <!-- System activity -->
+        <div class="clay p-5 sm:p-6 reveal">
+          <div class="panel-head">
+            <div>
+              <div class="eyebrow">Event Log</div>
+              <h2 class="section-title" style="font-size:1.25rem">System Activity</h2>
+            </div>
+            <span class="term-chip mono" style="font-size:0.62rem"><span class="dot dot-pulse"></span> LIVE</span>
+          </div>
+          <div class="timeline" id="activityList"><!-- JS --></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ FOOTER ============================ -->
+    <footer class="mt-12">
+      <div class="clay p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+        <div class="flex items-center gap-3">
+          <span class="emblem" aria-hidden="true"><svg><use href="#emblem"/></svg></span>
+          <div>
+            <div class="font-display" style="font-weight:700">METROLOGYLENS AI • TEAM INSIGHTX</div>
+            <div class="text-dim" style="font-size:0.8rem">Prototype • Department of Consumer Affairs • Legal Metrology</div>
+          </div>
+        </div>
+        <span class="term-chip mono"><span class="dot dot-pulse"></span> SYSTEM STATUS: ONLINE</span>
+      </div>
+      <p class="text-center text-dim mt-3 mono" style="font-size:0.7rem;margin-top:1rem">
+        Prototype build • Mock data • Not an official government system
+      </p>
+    </footer>
+  </main>
+
+  <!-- ============================ INSPECTION MODAL ============================ -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="clay neon-edge modal" id="modal">
+      <div class="flex items-center justify-between gap-3 p-5" style="border-bottom:1px solid var(--hair)">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="kpi-icon accent-cyan" style="--acc:var(--cyan);--acc-rgb:55,208,245"><i data-lucide="file-search"></i></span>
+          <div class="min-w-0">
+            <div class="eyebrow">Inspection Detail</div>
+            <div class="section-title mono" id="modalTitle" style="font-size:1.1rem">LM-0000</div>
+          </div>
+        </div>
+        <button class="clay-icon" id="modalClose" aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="modalBody"><!-- JS --></div>
+      <div class="flex items-center justify-end gap-3 p-5" style="border-top:1px solid var(--hair)">
+        <button class="clay-btn clay-btn--cyan clay-btn--sm" id="modalDownload"><i data-lucide="download"></i> Download Report</button>
+        <button class="clay-btn clay-btn--ghost clay-btn--sm" id="modalCloseBtn"><i data-lucide="x"></i> Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data layer, then app -->
+  <script>
+/* =====================================================================
+   MetrologyLens AI — DATA LAYER (mock)
+   ---------------------------------------------------------------------
+   FRONTEND-ONLY PROTOTYPE. Nothing here makes a network request.
+
+   Everything the dashboard renders flows through this module, so the
+   mock source can later be swapped for the real backend WITHOUT
+   touching the UI code.
+
+       Future integration target:  GET http://localhost:8000/api/history
+
+   To go live, replace the body of getInspectionData() with a fetch()
+   (a ready-to-use example is left commented in that function). The shape
+   returned here is the contract the UI expects.
+   ===================================================================== */
+
+(function (global) {
+  "use strict";
+
+  /* -------------------------------------------------------------------
+     Reference vocabulary — Legal Metrology (Packaged Commodities) checks
+     ------------------------------------------------------------------- */
+  const CHECK_LABELS = [
+    "MRP Declaration",
+    "Net Quantity Declaration",
+    "Manufacturer / Packer Details",
+    "Consumer Care Information",
+    "Date of Manufacture / Packing",
+    "Country of Origin",
+    "Mandatory Declaration",
+  ];
+
+  // Maps a failed declaration check -> the violation it produces.
+  const VIOLATION_FOR_CHECK = {
+    "MRP Declaration": "Missing MRP",
+    "Net Quantity Declaration": "Incorrect Net Quantity",
+    "Manufacturer / Packer Details": "Missing Manufacturer Details",
+    "Consumer Care Information": "Missing Consumer Care Information",
+    "Date of Manufacture / Packing": "Missing Date of Manufacture",
+    "Country of Origin": "Missing Country of Origin",
+    "Mandatory Declaration": "Incorrect Mandatory Declaration",
+  };
+
+  // The five violation categories tracked in the Violation Intelligence panel.
+  const VIOLATION_TYPES = [
+    "Missing MRP",
+    "Incorrect Net Quantity",
+    "Missing Manufacturer Details",
+    "Missing Consumer Care Information",
+    "Incorrect Mandatory Declaration",
+  ];
+
+  // Checks that can be intentionally failed to produce the tracked categories.
+  const FAILABLE_CHECKS = [
+    "MRP Declaration",
+    "Net Quantity Declaration",
+    "Manufacturer / Packer Details",
+    "Consumer Care Information",
+    "Mandatory Declaration",
+  ];
+
+  /* -------------------------------------------------------------------
+     Realistic Indian mock pools
+     ------------------------------------------------------------------- */
+  const PRODUCTS = [
+    { product: "Packaged Drinking Water", category: "Beverage",      units: ["500 ml", "1 L", "2 L"],        mrp: [10, 40] },
+    { product: "Packaged Milk",           category: "Dairy",         units: ["500 ml", "1 L"],               mrp: [27, 74] },
+    { product: "Table Butter",            category: "Dairy",         units: ["100 g", "500 g"],              mrp: [55, 275] },
+    { product: "Glucose Biscuits",        category: "Food",          units: ["100 g", "200 g", "300 g"],     mrp: [10, 90] },
+    { product: "Refined Cooking Oil",     category: "Grocery",       units: ["1 L", "5 L"],                  mrp: [120, 720] },
+    { product: "Basmati Rice",            category: "Staples",       units: ["1 kg", "5 kg"],                mrp: [95, 660] },
+    { product: "Wheat Flour (Atta)",      category: "Staples",       units: ["1 kg", "5 kg", "10 kg"],       mrp: [45, 480] },
+    { product: "Toor Dal",                category: "Staples",       units: ["500 g", "1 kg"],               mrp: [85, 190] },
+    { product: "Refined Sugar",           category: "Grocery",       units: ["1 kg", "5 kg"],                mrp: [45, 250] },
+    { product: "Tea Leaves",              category: "Beverage",      units: ["250 g", "500 g"],              mrp: [120, 320] },
+    { product: "Instant Coffee",          category: "Beverage",      units: ["50 g", "100 g"],               mrp: [180, 420] },
+    { product: "Pure Ghee",               category: "Dairy",         units: ["500 ml", "1 L"],               mrp: [320, 760] },
+    { product: "Namkeen Mixture",         category: "Food",          units: ["150 g", "400 g"],              mrp: [30, 120] },
+    { product: "Turmeric Powder",         category: "Food",          units: ["100 g", "200 g", "500 g"],     mrp: [40, 180] },
+    { product: "Detergent Powder",        category: "Household",     units: ["1 kg", "2 kg"],                mrp: [90, 320] },
+    { product: "Toothpaste",              category: "Personal Care", units: ["100 g", "150 g"],              mrp: [45, 130] },
+    { product: "Bath Soap",               category: "Personal Care", units: ["100 g", "3 x 100 g"],          mrp: [30, 150] },
+    { product: "Iodized Salt",            category: "Staples",       units: ["1 kg"],                        mrp: [20, 32] },
+    { product: "Natural Honey",           category: "Food",          units: ["250 g", "500 g"],              mrp: [150, 420] },
+    { product: "Potato Chips",            category: "Food",          units: ["52 g", "90 g", "150 g"],       mrp: [20, 99] },
+  ];
+
+  const LOCATIONS = [
+    "Ahmedabad", "Surat", "Vadodara", "Rajkot", "Gandhinagar",
+    "Mumbai", "Pune", "Nagpur", "Delhi", "Jaipur",
+    "Lucknow", "Bhopal", "Indore", "Bengaluru", "Chennai",
+    "Hyderabad", "Kolkata", "Chandigarh", "Kochi", "Patna",
+  ];
+
+  const MANUFACTURERS = [
+    { name: "Sabarmati Foods Pvt. Ltd.",   address: "Plot 42, GIDC Estate, Ahmedabad, Gujarat 382445" },
+    { name: "Narmada Beverages Ltd.",      address: "Survey 118, Makarpura, Vadodara, Gujarat 390010" },
+    { name: "Gir Dairy Co-operative",      address: "Dairy Road, Rajkot, Gujarat 360002" },
+    { name: "Deccan Agro Mills",           address: "MIDC Bhosari, Pune, Maharashtra 411026" },
+    { name: "Ganga Consumer Products",     address: "Panki Industrial Area, Kanpur, Uttar Pradesh 208022" },
+    { name: "Coastal Oils & Grains",       address: "Willingdon Island, Kochi, Kerala 682003" },
+    { name: "Aravalli Staples Ltd.",       address: "Sitapura Ind. Area, Jaipur, Rajasthan 302022" },
+    { name: "Nilgiri Tea Estates",         address: "Mettupalayam Road, Coimbatore, Tamil Nadu 641301" },
+    { name: "Sahyadri Snacks Pvt. Ltd.",   address: "Ambad MIDC, Nashik, Maharashtra 422010" },
+    { name: "Kaveri Home Care Ltd.",       address: "Peenya Ind. Area, Bengaluru, Karnataka 560058" },
+  ];
+
+  /* -------------------------------------------------------------------
+     Small helpers
+     ------------------------------------------------------------------- */
+  const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+
+  function buildChecks(failLabels) {
+    return CHECK_LABELS.map((label) => ({
+      label,
+      status: failLabels.indexOf(label) !== -1 ? "FAIL" : "PASS",
+    }));
+  }
+
+  function scoreFor(checks) {
+    const fails = checks.filter((c) => c.status === "FAIL").length;
+    if (fails === 0) return randInt(92, 99);
+    return clamp(randInt(52, 72) - (fails - 1) * 11, 24, 74);
+  }
+
+  function violationsFor(checks) {
+    return checks
+      .filter((c) => c.status === "FAIL")
+      .map((c) => VIOLATION_FOR_CHECK[c.label])
+      .filter(Boolean);
+  }
+
+  // Running id counter — live/refresh records get higher ids than the seeds.
+  let nextIdNum = 1049;
+
+  /**
+   * Build a single normalized inspection record.
+   * @param {object} [opts] optional overrides (used for the fixed seed rows)
+   */
+  function generateInspection(opts) {
+    opts = opts || {};
+    const base = opts.productDef || pick(PRODUCTS);
+    const willFail = opts.status
+      ? opts.status === "FAIL"
+      : Math.random() < 0.18; // ~82% national compliance target
+
+    let failLabels = opts.failLabels;
+    if (!failLabels) {
+      if (willFail) {
+        const count = Math.random() < 0.72 ? 1 : 2;
+        failLabels = [];
+        while (failLabels.length < count) {
+          const c = pick(FAILABLE_CHECKS);
+          if (failLabels.indexOf(c) === -1) failLabels.push(c);
         }
+      } else {
+        failLabels = [];
+      }
+    }
 
-        // Initial Load
-        fetchAndUpdateDashboard();
+    const checks = buildChecks(failLabels);
+    const status = checks.some((c) => c.status === "FAIL") ? "FAIL" : "PASS";
+    const unit = opts.quantity || pick(base.units);
+    const mrp = opts.mrp != null ? opts.mrp : randInt(base.mrp[0], base.mrp[1]);
+    const manufacturer = opts.manufacturer || pick(MANUFACTURERS);
+    const id = opts.id || "LM-" + nextIdNum++;
 
-        // Auto-refresh every 3 seconds (3000 ms)
-        setInterval(fetchAndUpdateDashboard, 3000);
-    </script>
+    return {
+      id,
+      product: opts.product || base.product,
+      category: opts.category || base.category,
+      quantity: unit,
+      mrp,                                   // number — UI formats with ₹
+      location: opts.location || pick(LOCATIONS),
+      status,                                // "PASS" | "FAIL"
+      timestamp: opts.timestamp != null ? opts.timestamp : Date.now(),
+      manufacturer,                          // { name, address }
+      complianceScore: opts.complianceScore != null ? opts.complianceScore : scoreFor(checks),
+      checks,                                // [{ label, status }]
+      violations: violationsFor(checks),     // [string]
+    };
+  }
+
+  /* -------------------------------------------------------------------
+     Fixed seed feed — the four rows from the brief plus realistic history
+     ------------------------------------------------------------------- */
+  const MIN = 60 * 1000;
+  function minsAgo(m) {
+    return Date.now() - m * MIN;
+  }
+
+  function buildSeedInspections() {
+    const seeds = [
+      generateInspection({
+        id: "LM-1048", product: "Packaged Drinking Water", category: "Beverage",
+        quantity: "1 L", mrp: 20, location: "Ahmedabad", status: "PASS",
+        failLabels: [], manufacturer: MANUFACTURERS[1], complianceScore: 97, timestamp: minsAgo(2),
+      }),
+      generateInspection({
+        id: "LM-1047", product: "Packaged Milk", category: "Dairy",
+        quantity: "500 ml", mrp: 32, location: "Surat", status: "FAIL",
+        failLabels: ["Consumer Care Information"], manufacturer: MANUFACTURERS[2],
+        complianceScore: 68, timestamp: minsAgo(5),
+      }),
+      generateInspection({
+        id: "LM-1046", product: "Glucose Biscuits", category: "Food",
+        quantity: "100 g", mrp: 10, location: "Vadodara", status: "PASS",
+        failLabels: [], manufacturer: MANUFACTURERS[0], complianceScore: 93, timestamp: minsAgo(8),
+      }),
+      generateInspection({
+        id: "LM-1045", product: "Refined Cooking Oil", category: "Grocery",
+        quantity: "1 L", mrp: 145, location: "Rajkot", status: "FAIL",
+        failLabels: ["Net Quantity Declaration", "MRP Declaration"], manufacturer: MANUFACTURERS[5],
+        complianceScore: 58, timestamp: minsAgo(12),
+      }),
+    ];
+
+    // Additional realistic history (older rows), newest first.
+    const extra = [];
+    let cursor = 16;
+    for (let i = 0; i < 16; i++) {
+      cursor += randInt(3, 11);
+      extra.push(generateInspection({ id: "LM-" + (1044 - i), timestamp: minsAgo(cursor) }));
+    }
+
+    return seeds.concat(extra);
+  }
+
+  /* -------------------------------------------------------------------
+     National aggregate stats (KPIs, trend, breakdown, violations)
+     These are "national" totals, independent of the sampled feed above.
+     ------------------------------------------------------------------- */
+  const nationalStats = {
+    kpis: {
+      inspectionsToday: { value: 128, deltaPct: 12, note: "from yesterday" },
+      violationsFlagged: { value: 23, sharePct: 18 },
+      compliantPackages: { value: 105, sharePct: 82 },
+      nationalCompliance: { value: 82.0, deltaPct: 4.2, note: "this month" },
+    },
+    trend: {
+      // Last 7 days of national compliance %.
+      labels: buildTrendLabels(),
+      values: [77.1, 78.4, 78.9, 80.2, 79.6, 81.1, 82.0],
+    },
+    breakdown: { compliant: 105, violations: 23 }, // 105 / 128 = 82%
+    violationBreakdown: [
+      { type: "Missing MRP", count: 6 },
+      { type: "Incorrect Net Quantity", count: 5 },
+      { type: "Missing Manufacturer Details", count: 4 },
+      { type: "Missing Consumer Care Information", count: 5 },
+      { type: "Incorrect Mandatory Declaration", count: 3 },
+    ],
+  };
+
+  function buildTrendLabels() {
+    const labels = [];
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      labels.push(d.toLocaleDateString("en-IN", { weekday: "short" }));
+    }
+    return labels;
+  }
+
+  function getNationalStats() {
+    // Deep-ish clone so callers can mutate their working copy freely.
+    return JSON.parse(JSON.stringify(nationalStats));
+  }
+
+  /* -------------------------------------------------------------------
+     PUBLIC DATA API
+     ------------------------------------------------------------------- */
+
+  function normalizeApiRecord(row) {
+    const fields = row.extracted_fields || {};
+    const mrpStr = fields.MRP || "0";
+    const mrp = parseInt(mrpStr.replace(/[^0-9]/g, '')) || 0;
+    const ts = new Date(row.timestamp).getTime() || Date.now();
+    let rawViolations = row.violations_list || [];
+    let violations = rawViolations.map(v => typeof v === 'string' ? v : (v.rule + ": " + v.description));
+
+    let checks = buildChecks([]);
+    if (violations.length > 0) {
+        checks[0].status = "FAIL";
+    }
+
+    return {
+      id: "LM-" + row.inspection_id.substring(0,5).toUpperCase(),
+      product: "Scanned Product",
+      category: "General",
+      quantity: fields.Net_Quantity || "-",
+      mrp: mrp,
+      location: "India",
+      status: row.status.toUpperCase() === "PASS" ? "PASS" : "FAIL",
+      timestamp: ts,
+      manufacturer: { name: fields.Manufacturer || "Unknown", address: "" },
+      complianceScore: row.status.toUpperCase() === "PASS" ? 99 : 45,
+      checks: checks,
+      violations: violations,
+    };
+  }
+
+  async function getInspectionData() {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/history");
+      if (!res.ok) throw new Error("DATA STREAM INTERRUPTED");
+      const raw = await res.json();
+      if (raw.length === 0) {
+        return buildSeedInspections(); // Fallback if no real data
+      }
+      return raw.map(normalizeApiRecord);
+    } catch (e) {
+      console.warn("Using mock data because real API failed: ", e);
+      return buildSeedInspections();
+    }
+  }
+
+  // Expose the data layer.
+  global.MetroData = {
+    getInspectionData,
+    getNationalStats,
+    generateInspection,
+    CHECK_LABELS,
+    VIOLATION_TYPES,
+    LOCATIONS,
+  };
+})(window);
+
+  </script>
+  <script>
+/* =====================================================================
+   MetrologyLens AI — APPLICATION LOGIC
+   ---------------------------------------------------------------------
+   Renders the dashboard from the mock data layer (data.js) and wires up
+   every interaction. No network calls. Data flows in through
+   MetroData.getInspectionData() / getNationalStats() so the source can
+   be swapped for the real API without changing anything below.
+   ===================================================================== */
+
+(function () {
+  "use strict";
+
+  /* ---------------------------------------------------------------- utils */
+  const $  = (sel, ctx) => (ctx || document).querySelector(sel);
+  const $$ = (sel, ctx) => Array.from((ctx || document).querySelectorAll(sel));
+  const RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const CLR = { neon: "22,139,114", cyan: "8,127,140", danger: "196,61,75", amber: "184,121,22", purple: "83,107,155" };
+
+  function icons() { try { window.lucide && window.lucide.createIcons(); } catch (e) {} }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+  function formatINR(n) { return "₹" + Number(n).toLocaleString("en-IN"); }
+
+  function timeAgo(ts) {
+    const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+    if (s < 45) return "just now";
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + " min ago";
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + " hr ago";
+    return Math.floor(h / 24) + "d ago";
+  }
+
+  // Animated count-up on an element (respects reduced motion).
+  function countUp(elm, to, opts) {
+    opts = opts || {};
+    const decimals = opts.decimals || 0;
+    const suffix = opts.suffix || "";
+    const from = opts.from != null ? opts.from : 0;
+    const dur = RM ? 0 : (opts.duration || 1100);
+    const fmt = (v) => (opts.currency ? formatINR(Math.round(v)) : v.toFixed(decimals)) + suffix;
+    if (dur === 0) { elm.textContent = fmt(to); return; }
+    const start = performance.now();
+    (function tick(now) {
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      elm.textContent = fmt(from + (to - from) * eased);
+      if (p < 1) requestAnimationFrame(tick);
+    })(start);
+  }
+
+  /* ---------------------------------------------------------------- state */
+  const INITIAL_VISIBLE = 8, STEP = 6;
+  const state = {
+    inspections: [],
+    stats: null,
+    filters: { search: "", status: "ALL", location: "ALL" },
+    visible: INITIAL_VISIBLE,
+    filtered: [],
+    activity: [],
+    charts: {},
+    live: false,
+    liveTimer: null,
+  };
+
+  /* ---------------------------------------------------------------- boot */
+  document.addEventListener("DOMContentLoaded", init);
+
+  async function init() {
+    const dataReady = loadData();     // start fetching while the loader plays
+    await runLoader();
+    try {
+      await dataReady;
+    } catch (e) {
+      hideLoader();
+      showFeedError();
+      return;
+    }
+    renderAll();
+    hideLoader();
+    startEntrance();
+    wireEvents();
+    seedActivity();
+  }
+
+  async function loadData() {
+    const [records, stats] = await Promise.all([
+      window.MetroData.getInspectionData(),
+      Promise.resolve(window.MetroData.getNationalStats()),
+    ]);
+    state.inspections = records;
+    state.stats = stats;
+  }
+
+  /* ---------------------------------------------------------------- loader */
+  function runLoader() {
+    return new Promise((resolve) => {
+      const lines = $$("#loaderTerm [data-line]");
+      const bar = $("#loaderBar");
+      if (RM) { lines.forEach((l) => l.classList.add("on")); bar.style.width = "100%"; setTimeout(resolve, 200); return; }
+      let i = 0;
+      (function step() {
+        if (i < lines.length) {
+          lines[i].classList.add("on");
+          bar.style.width = Math.round(((i + 1) / lines.length) * 100) + "%";
+          i++; setTimeout(step, 340);
+        } else setTimeout(resolve, 360);
+      })();
+    });
+  }
+  function hideLoader() { $("#loader").classList.add("done"); }
+
+  /* ---------------------------------------------------------------- render: all */
+  function renderAll() {
+    renderKPIs();
+    populateLocationFilter();
+    applyFilters();
+    renderBreakdownLegend();
+    renderViolations();
+    icons();
+  }
+
+  // Fired once the loader clears: count-ups, gauges, charts, observers.
+  function startEntrance() {
+    initCharts();
+    applyStatsToUI(true);
+    observeReveals();
+    observeViolationBars();
+  }
+
+  /* ---------------------------------------------------------------- KPIs */
+  const KPI_CARDS = [
+    { key: "inspectionsToday", title: "Inspections Today", icon: "clipboard-list", accent: "cyan", rgb: CLR.cyan, decimals: 0, chip: "up", chipText: "+12%", secondary: "from yesterday" },
+    { key: "violationsFlagged", title: "Violations Flagged", icon: "triangle-alert", accent: "danger", rgb: CLR.danger, decimals: 0, chip: "share", chipText: "18%", secondary: "of inspections" },
+    { key: "compliantPackages", title: "Compliant Packages", icon: "circle-check", accent: "neon", rgb: CLR.neon, decimals: 0, chip: "up", chipText: "82%", secondary: "of inspections" },
+    { key: "nationalCompliance", title: "National Compliance", icon: "shield-check", accent: "purple", rgb: CLR.purple, decimals: 1, suffix: "%", chip: "up", chipText: "+4.2%", secondary: "this month" },
+  ];
+
+  function chipHTML(kind, text) {
+    if (kind === "up")
+      return `<span class="badge badge-pass"><i data-lucide="trending-up"></i>${text}</span>`;
+    return `<span class="badge" style="color:var(--amber);background:rgba(${CLR.amber},.12);border:1px solid rgba(${CLR.amber},.4)"><i data-lucide="percent"></i>${text}</span>`;
+  }
+
+  function renderKPIs() {
+    const grid = $("#kpiGrid");
+    grid.innerHTML = KPI_CARDS.map((c, i) => `
+      <article class="clay kpi hoverable reveal accent-${c.accent}" style="transition-delay:${i * 70}ms">
+        <div class="flex items-start justify-between">
+          <span class="kpi-icon"><i data-lucide="${c.icon}"></i></span>
+          ${chipHTML(c.chip, c.chipText)}
+        </div>
+        <div class="eyebrow" style="margin-top:1.1rem">${c.title}</div>
+        <div class="kpi-value" id="kpi-${c.key}" data-decimals="${c.decimals}" ${c.suffix ? `data-suffix="${c.suffix}"` : ""}>0${c.suffix || ""}</div>
+        <div class="text-dim" style="font-size:0.8rem;margin-top:0.25rem">${c.secondary}</div>
+      </article>`).join("");
+  }
+
+  function setKpiValue(key, animate) {
+    const card = KPI_CARDS.find((c) => c.key === key);
+    const el = $("#kpi-" + key);
+    if (!el || !card) return;
+    const to = state.stats.kpis[key].value;
+    const cur = parseFloat(el.textContent) || 0;
+    countUp(el, to, { decimals: card.decimals, suffix: card.suffix || "", from: animate ? 0 : cur, duration: animate ? 1200 : 650 });
+  }
+
+  /* ---------------------------------------------------------------- stats -> UI */
+  function recomputeStats() {
+    const k = state.stats.kpis;
+    const total = k.inspectionsToday.value;
+    k.compliantPackages.sharePct = Math.round((k.compliantPackages.value / total) * 100);
+    k.violationsFlagged.sharePct = Math.round((k.violationsFlagged.value / total) * 100);
+    k.nationalCompliance.value = +((k.compliantPackages.value / total) * 100).toFixed(1);
+    state.stats.breakdown.compliant = k.compliantPackages.value;
+    state.stats.breakdown.violations = k.violationsFlagged.value;
+    // Keep the newest trend point tracking live national compliance.
+    state.stats.trend.values[state.stats.trend.values.length - 1] = k.nationalCompliance.value;
+  }
+
+  function applyStatsToUI(animate) {
+    const k = state.stats.kpis;
+    KPI_CARDS.forEach((c) => setKpiValue(c.key, animate));
+
+    // Hero console
+    countUp($("#heroCount"), k.inspectionsToday.value, { from: animate ? 0 : parseFloat($("#heroCount").textContent) || 0 });
+    const pct = k.nationalCompliance.value;
+    setGauge($("#heroGauge"), 62, pct);
+    countUp($("#heroGaugePct"), pct, { decimals: 0, suffix: "%", from: animate ? 0 : parseFloat($("#heroGaugePct").textContent) || 0 });
+
+    // Breakdown center + chart
+    const bd = state.stats.breakdown;
+    const bpct = Math.round((bd.compliant / (bd.compliant + bd.violations)) * 100);
+    countUp($("#breakdownPct"), bpct, { decimals: 0, suffix: "%", from: animate ? 0 : parseFloat($("#breakdownPct").textContent) || 0 });
+    if (state.charts.breakdown) {
+      state.charts.breakdown.data.datasets[0].data = [bd.compliant, bd.violations];
+      state.charts.breakdown.update();
+    }
+    if (state.charts.trend) {
+      state.charts.trend.data.datasets[0].data = state.stats.trend.values.slice();
+      state.charts.trend.update();
+    }
+    renderBreakdownLegend();
+  }
+
+  // Set an SVG ring's dashoffset for a given radius + percentage.
+  function setGauge(circle, r, pct) {
+    if (!circle) return;
+    const c = 2 * Math.PI * r;
+    circle.style.strokeDasharray = c.toFixed(1);
+    circle.style.strokeDashoffset = RM ? (c * (1 - pct / 100)).toFixed(1) : c.toFixed(1);
+    if (!RM) requestAnimationFrame(() => { circle.style.strokeDashoffset = (c * (1 - pct / 100)).toFixed(1); });
+  }
+
+  /* ---------------------------------------------------------------- charts */
+  function initCharts() {
+    if (!window.Chart) return;
+    Chart.defaults.color = "#9db1b8";
+    Chart.defaults.font.family = "Inter, sans-serif";
+    Chart.defaults.font.size = 11;
+
+    const areaGrad = (ctx, rgb) => {
+      const { ctx: c, chartArea } = ctx.chart;
+      if (!chartArea) return "transparent";
+      const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+      g.addColorStop(0, `rgba(${rgb},0.34)`);
+      g.addColorStop(1, `rgba(${rgb},0)`);
+      return g;
+    };
+    const tooltip = {
+      backgroundColor: "#12304a", borderColor: "rgba(8,127,140,0.3)", borderWidth: 1,
+      titleColor: "#eef6f4", bodyColor: "#9db1b8", padding: 10, cornerRadius: 10, displayColors: false,
+      titleFont: { family: "JetBrains Mono, monospace", size: 11 },
+    };
+
+    // Trend (single series -> no legend; the card title names it)
+    state.charts.trend = new Chart($("#trendChart"), {
+      type: "line",
+      data: {
+        labels: state.stats.trend.labels,
+        datasets: [{
+          data: state.stats.trend.values,
+          borderColor: `rgb(${CLR.cyan})`,
+          backgroundColor: (ctx) => areaGrad(ctx, CLR.cyan),
+          borderWidth: 2, tension: 0.4, fill: true,
+          pointRadius: 0, pointHoverRadius: 6,
+          pointHoverBackgroundColor: `rgb(${CLR.cyan})`, pointHoverBorderColor: "#ffffff", pointHoverBorderWidth: 2,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: RM ? 0 : 1200 },
+        interaction: { mode: "index", intersect: false },
+        plugins: { legend: { display: false }, tooltip: Object.assign({}, tooltip, {
+          callbacks: { title: (i) => i[0].label, label: (c) => c.parsed.y.toFixed(1) + "% compliant" },
+        }) },
+        scales: {
+          y: { min: 60, max: 100, grid: { color: "rgba(150,220,235,0.06)" }, border: { display: false }, ticks: { callback: (v) => v + "%" } },
+          x: { grid: { display: false }, border: { color: "rgba(150,220,235,0.12)" } },
+        },
+      },
+    });
+
+    // Breakdown (two-status doughnut -> status colors carried with labels/legend)
+    state.charts.breakdown = new Chart($("#breakdownChart"), {
+      type: "doughnut",
+      data: {
+        labels: ["Compliant", "Violations"],
+        datasets: [{
+          data: [state.stats.breakdown.compliant, state.stats.breakdown.violations],
+          backgroundColor: [`rgb(${CLR.neon})`, `rgb(${CLR.danger})`],
+          borderColor: "#ffffff", borderWidth: 3, hoverOffset: 8,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: "74%",
+        animation: { duration: RM ? 0 : 1100, animateRotate: true },
+        plugins: { legend: { display: false }, tooltip: Object.assign({}, tooltip, {
+          callbacks: { label: (c) => {
+            const tot = c.dataset.data.reduce((a, b) => a + b, 0);
+            return `${c.label}: ${c.parsed} (${Math.round((c.parsed / tot) * 100)}%)`;
+          } },
+        }) },
+      },
+    });
+  }
+
+  function renderBreakdownLegend() {
+    const bd = state.stats.breakdown;
+    const tot = bd.compliant + bd.violations;
+    const rows = [
+      { label: "Compliant", val: bd.compliant, color: `rgb(${CLR.neon})` },
+      { label: "Violations", val: bd.violations, color: `rgb(${CLR.danger})` },
+    ];
+    $("#breakdownLegend").innerHTML = rows.map((r) => `
+      <div class="legend-row">
+        <span class="legend-dot" style="background:${r.color};color:${r.color}"></span>
+        <span style="flex:1">${r.label}</span>
+        <span class="mono" style="font-weight:700">${r.val}</span>
+        <span class="mono text-dim" style="min-width:44px;text-align:right">${Math.round((r.val / tot) * 100)}%</span>
+      </div>`).join("");
+  }
+
+  /* ---------------------------------------------------------------- feed table */
+  function populateLocationFilter() {
+    const sel = $("#locationFilter");
+    const locs = Array.from(new Set(state.inspections.map((r) => r.location))).sort();
+    sel.innerHTML = `<option value="ALL">All locations</option>` + locs.map((l) => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join("");
+  }
+
+  function applyFilters() {
+    const f = state.filters;
+    const q = f.search.trim().toLowerCase();
+    state.filtered = state.inspections.filter((r) => {
+      if (f.status !== "ALL" && r.status !== f.status) return false;
+      if (f.location !== "ALL" && r.location !== f.location) return false;
+      if (q && !(`${r.id} ${r.product} ${r.location} ${r.category}`.toLowerCase().includes(q))) return false;
+      return true;
+    });
+    renderTable();
+  }
+
+  function statusBadge(status) {
+    return status === "PASS"
+      ? `<span class="badge badge-pass"><i data-lucide="circle-check"></i>PASS</span>`
+      : `<span class="badge badge-fail"><i data-lucide="triangle-alert"></i>FAIL</span>`;
+  }
+
+  function renderTable(opts) {
+    opts = opts || {};
+    const body = $("#feedBody");
+    const rows = state.filtered.slice(0, state.visible);
+
+    // Empty state
+    const empty = state.filtered.length === 0;
+    $("#feedEmpty").classList.toggle("show", empty);
+    $("#feedTable").style.display = empty ? "none" : "";
+
+    body.innerHTML = rows.map((r, i) => `
+      <tr data-id="${r.id}" class="${opts.animate && !RM ? "row-enter" : ""} ${opts.newId === r.id ? "row-new" : ""}" style="${opts.animate && !RM ? `animation-delay:${Math.min(i, 8) * 45}ms` : ""}">
+        <td class="cell-id">${r.id}</td>
+        <td><div class="cell-mono" style="font-family:Inter">${escapeHtml(r.product)}</div></td>
+        <td><span class="cell-sub">${escapeHtml(r.category)}</span></td>
+        <td class="cell-mono">${escapeHtml(r.quantity)}</td>
+        <td class="cell-mono">${formatINR(r.mrp)}</td>
+        <td>${escapeHtml(r.location)}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td class="cell-sub mono">${timeAgo(r.timestamp)}</td>
+        <td>
+          <div class="row-actions">
+            <button class="clay-btn clay-btn--ghost clay-btn--sm" data-view="${r.id}">View</button>
+            <button class="clay-icon" style="width:34px;height:34px;border-radius:10px" data-download="${r.id}" aria-label="Download report ${r.id}"><i data-lucide="download"></i></button>
+          </div>
+        </td>
+      </tr>`).join("");
+
+    // Footer count + load-more
+    $("#feedCount").textContent = `Showing ${rows.length} of ${state.filtered.length}`;
+    const more = $("#loadMoreBtn");
+    more.style.display = state.filtered.length > state.visible ? "" : "none";
+    icons();
+  }
+
+  /* ---------------------------------------------------------------- violations */
+  function renderViolations() {
+    const list = state.stats.violationBreakdown;
+    const total = list.reduce((a, b) => a + b.count, 0);
+    $("#violationList").innerHTML = list.map((v) => {
+      const pct = Math.round((v.count / total) * 100);
+      return `
+      <div style="margin-bottom:1.05rem">
+        <div class="flex items-center justify-between" style="margin-bottom:0.4rem">
+          <span style="font-size:0.9rem">${escapeHtml(v.type)}</span>
+          <span class="mono text-dim" style="font-size:0.76rem">${v.count} · ${pct}%</span>
+        </div>
+        <div class="vbar-track"><div class="vbar-fill" data-w="${pct}"></div></div>
+      </div>`;
+    }).join("");
+  }
+
+  function observeViolationBars() {
+    const bars = $$("#violationList .vbar-fill");
+    if (RM) { bars.forEach((b) => (b.style.width = b.dataset.w + "%")); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.style.width = e.target.dataset.w + "%"; io.unobserve(e.target); } });
+    }, { threshold: 0.4 });
+    bars.forEach((b) => io.observe(b));
+  }
+
+  /* ---------------------------------------------------------------- activity */
+  function seedActivity() {
+    const src = state.inspections.slice(0, 5);
+    state.activity = [];
+    src.forEach((r) => {
+      if (r.status === "FAIL") pushActivity({ tone: "bad", text: `Violation flagged on ${r.id}`, sub: `${r.violations[0] || "Compliance issue"} · ${r.location}`, ts: r.timestamp }, true);
+      else pushActivity({ tone: "ok", text: `Inspection ${r.id} completed`, sub: `${r.product} · ${r.location}`, ts: r.timestamp }, true);
+    });
+    pushActivity({ tone: "info", text: "Compliance report generated", sub: "National summary · today", ts: Date.now() - 9 * 60000 }, true);
+    state.activity.sort((a, b) => b.ts - a.ts);
+    renderActivity();
+  }
+
+  function pushActivity(item, silent) {
+    state.activity.unshift(item);
+    state.activity = state.activity.slice(0, 8);
+    if (!silent) renderActivity();
+  }
+
+  function renderActivity() {
+    $("#activityList").innerHTML = state.activity.map((a) => `
+      <div class="tl-item">
+        <span class="tl-dot ${a.tone}"></span>
+        <div class="flex items-start justify-between gap-3">
+          <span style="font-size:0.9rem">${escapeHtml(a.text)}</span>
+          <span class="tl-time" style="white-space:nowrap">${timeAgo(a.ts)}</span>
+        </div>
+        <div class="text-dim" style="font-size:0.78rem">${escapeHtml(a.sub)}</div>
+      </div>`).join("");
+  }
+
+  /* ---------------------------------------------------------------- modal */
+  let lastFocused = null;
+
+  function openModal(id) {
+    const r = state.inspections.find((x) => x.id === id);
+    if (!r) return;
+    lastFocused = document.activeElement;
+    $("#modalTitle").textContent = r.id;
+    $("#modalDownload").dataset.download = r.id;
+    renderModalBody(r);
+    const bd = $("#modalBackdrop");
+    bd.classList.add("show");
+    icons();
+    setTimeout(() => $("#modalClose").focus(), 40);
+    document.addEventListener("keydown", modalKeydown);
+  }
+
+  function closeModal() {
+    $("#modalBackdrop").classList.remove("show");
+    document.removeEventListener("keydown", modalKeydown);
+    if (lastFocused) lastFocused.focus();
+  }
+
+  function modalKeydown(e) {
+    if (e.key === "Escape") return closeModal();
+    if (e.key === "Tab") { // simple focus trap
+      const f = $$('#modal button, #modal [tabindex]:not([tabindex="-1"])');
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  }
+
+  function scoreColor(s) { return s >= 85 ? `rgb(${CLR.neon})` : s >= 70 ? `rgb(${CLR.amber})` : `rgb(${CLR.danger})`; }
+
+  function renderModalBody(r) {
+    const c = 2 * Math.PI * 34;
+    const off = c * (1 - r.complianceScore / 100);
+    const detail = (k, v, mono) => `<div class="detail"><div class="k">${k}</div><div class="v ${mono ? "mono" : ""}">${v}</div></div>`;
+
+    const checks = r.checks.map((ch) => `
+      <div class="check-row">
+        <span class="label"><span class="check-ic ${ch.status === "PASS" ? "pass" : "fail"}"><i data-lucide="${ch.status === "PASS" ? "check" : "x"}"></i></span>${escapeHtml(ch.label)}</span>
+        ${ch.status === "PASS" ? `<span class="badge badge-pass">PASS</span>` : `<span class="badge badge-fail">FAIL</span>`}
+      </div>`).join("");
+
+    const violations = r.violations.length
+      ? `<div class="clay-inset" style="padding:0.9rem 1rem;border-color:rgba(${CLR.danger},0.3)">
+           ${r.violations.map((v) => `<div class="flex items-center gap-2" style="color:var(--danger);font-weight:600;margin:0.15rem 0"><i data-lucide="triangle-alert" style="width:16px;height:16px"></i> ${escapeHtml(v)}</div>`).join("")}
+         </div>`
+      : `<div class="clay-inset flex items-center gap-2" style="padding:0.9rem 1rem;color:var(--success);font-weight:600"><i data-lucide="circle-check" style="width:16px;height:16px"></i> No violations detected — all mandatory declarations present.</div>`;
+
+    $("#modalBody").innerHTML = `
+      <div class="flex items-center gap-4" style="margin-bottom:1.2rem">
+        <div class="relative" style="width:96px;height:96px;flex:none">
+          <svg class="score-ring" width="96" height="96" viewBox="0 0 96 96">
+            <circle cx="48" cy="48" r="34" fill="none" stroke="var(--surface-3)" stroke-width="9"/>
+            <circle cx="48" cy="48" r="34" fill="none" stroke="${scoreColor(r.complianceScore)}" stroke-width="9" stroke-linecap="round"
+                    stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" style="filter:drop-shadow(0 0 6px ${scoreColor(r.complianceScore)})"/>
+          </svg>
+          <div class="doughnut-center"><div class="font-display" style="font-weight:700;font-size:1.4rem">${r.complianceScore}</div><div class="eyebrow" style="font-size:0.5rem">SCORE</div></div>
+        </div>
+        <div style="flex:1">
+          <div class="eyebrow">Compliance Score</div>
+          <div class="section-title" style="font-size:1.25rem">${escapeHtml(r.product)}</div>
+          <div style="margin-top:0.4rem">${statusBadge(r.status)}</div>
+        </div>
+      </div>
+
+      <div class="detail-grid" style="margin-bottom:1rem">
+        ${detail("Inspection ID", r.id, true)}
+        ${detail("Category", escapeHtml(r.category))}
+        ${detail("Net Quantity", escapeHtml(r.quantity), true)}
+        ${detail("MRP", formatINR(r.mrp), true)}
+        ${detail("Location", escapeHtml(r.location))}
+        ${detail("Inspected", new Date(r.timestamp).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }), true)}
+      </div>
+      <div class="detail" style="margin-bottom:1.3rem">
+        <div class="k">Manufacturer / Packer</div>
+        <div class="v">${escapeHtml(r.manufacturer.name)}</div>
+        <div class="text-dim" style="font-size:0.8rem;margin-top:0.15rem">${escapeHtml(r.manufacturer.address)}</div>
+      </div>
+
+      <div class="eyebrow" style="margin-bottom:0.6rem">Declaration Checks</div>
+      ${checks}
+
+      <div class="eyebrow" style="margin:1.1rem 0 0.6rem">Violation Details</div>
+      ${violations}
+    `;
+  }
+
+  /* ---------------------------------------------------------------- report download */
+  function downloadReport(id) {
+    const r = state.inspections.find((x) => x.id === id);
+    if (!r) return;
+    const html = buildReportHTML(r);
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `MetrologyLens_Report_${r.id}.html`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast({ tone: "success", title: "Report generated", msg: `Inspection ${r.id} report downloaded.` });
+  }
+
+  function buildReportHTML(r) {
+    const rows = r.checks.map((c) => `<tr><td>${escapeHtml(c.label)}</td><td class="${c.status === "PASS" ? "ok" : "bad"}">${c.status}</td></tr>`).join("");
+    const viol = r.violations.length ? r.violations.map((v) => `<li>${escapeHtml(v)}</li>`).join("") : "<li>None — all mandatory declarations present.</li>";
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>MetrologyLens Report ${r.id}</title>
+      <style>
+        body{font-family:Arial,Helvetica,sans-serif;color:#1b2733;max-width:760px;margin:32px auto;padding:0 24px;line-height:1.5}
+        .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0d7a54;padding-bottom:14px}
+        h1{font-size:20px;margin:0;color:#0d7a54} .sub{color:#667;font-size:12px}
+        h2{font-size:14px;margin:26px 0 8px;text-transform:uppercase;letter-spacing:.06em;color:#0d7a54}
+        table{width:100%;border-collapse:collapse;font-size:14px} td,th{border:1px solid #dde3ea;padding:8px 10px;text-align:left}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px}
+        .grid div{border:1px solid #dde3ea;border-radius:6px;padding:8px 10px} .k{color:#889;font-size:11px;text-transform:uppercase}
+        .ok{color:#0d7a54;font-weight:700} .bad{color:#c0392b;font-weight:700}
+        .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px}
+        .p{background:#e4f7ef;color:#0d7a54} .f{background:#fdeaea;color:#c0392b}
+        .print{margin-top:24px}.print button{background:#0d7a54;color:#fff;border:0;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:14px}
+        @media print{.print{display:none}}
+      </style></head><body>
+      <div class="hd"><div><h1>MetrologyLens AI — Inspection Report</h1><div class="sub">Department of Consumer Affairs • Legal Metrology • Prototype</div></div>
+        <span class="badge ${r.status === "PASS" ? "p" : "f"}">${r.status}</span></div>
+      <h2>Summary</h2>
+      <div class="grid">
+        <div><div class="k">Inspection ID</div>${r.id}</div>
+        <div><div class="k">Compliance Score</div>${r.complianceScore} / 100</div>
+        <div><div class="k">Product</div>${escapeHtml(r.product)} (${escapeHtml(r.category)})</div>
+        <div><div class="k">Net Quantity</div>${escapeHtml(r.quantity)}</div>
+        <div><div class="k">MRP</div>₹${r.mrp}</div>
+        <div><div class="k">Location</div>${escapeHtml(r.location)}</div>
+        <div><div class="k">Manufacturer</div>${escapeHtml(r.manufacturer.name)}</div>
+        <div><div class="k">Inspected</div>${new Date(r.timestamp).toLocaleString("en-IN")}</div>
+      </div>
+      <h2>Declaration Checks</h2>
+      <table><thead><tr><th>Declaration</th><th>Result</th></tr></thead><tbody>${rows}</tbody></table>
+      <h2>Violations</h2><ul>${viol}</ul>
+      <div class="print"><button onclick="window.print()">Print / Save as PDF</button></div>
+      </body></html>`;
+  }
+
+  /* ---------------------------------------------------------------- toasts */
+  const TOAST_IC = { success: "circle-check", info: "info", warn: "triangle-alert", danger: "triangle-alert" };
+  const TOAST_ACC = { success: CLR.neon, info: CLR.cyan, warn: CLR.amber, danger: CLR.danger };
+
+  function toast(o) {
+    const wrap = $("#toastWrap");
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.style.setProperty("--acc", `rgb(${TOAST_ACC[o.tone] || CLR.cyan})`);
+    t.innerHTML = `<span class="t-ic"><i data-lucide="${TOAST_IC[o.tone] || "info"}"></i></span>
+      <div style="flex:1"><div class="t-title">${escapeHtml(o.title)}</div><div class="t-msg">${escapeHtml(o.msg || "")}</div></div>`;
+    wrap.appendChild(t);
+    icons();
+    if (wrap.children.length > 4) wrap.firstElementChild.remove();
+    setTimeout(() => { t.classList.add("leaving"); setTimeout(() => t.remove(), 350); }, 3600);
+  }
+
+  /* ---------------------------------------------------------------- live simulation */
+  function addLiveInspection(highlight) {
+    const rec = window.MetroData.generateInspection({});
+    state.inspections.unshift(rec);
+
+    const k = state.stats.kpis;
+    k.inspectionsToday.value += 1;
+    if (rec.status === "FAIL") k.violationsFlagged.value += 1;
+    else k.compliantPackages.value += 1;
+    recomputeStats();
+
+    if (rec.status === "FAIL")
+      pushActivity({ tone: "bad", text: `Violation flagged on ${rec.id}`, sub: `${rec.violations[0] || "Compliance issue"} · ${rec.location}`, ts: rec.timestamp });
+    else
+      pushActivity({ tone: "ok", text: `Inspection ${rec.id} completed`, sub: `${rec.product} · ${rec.location}`, ts: rec.timestamp });
+
+    applyStatsToUI(false);
+    applyFilters();
+    // Re-render with the new row flagged (only if it survives current filters)
+    if (state.filtered.some((x) => x.id === rec.id)) renderTable({ newId: rec.id });
+
+    if (highlight) toast({ tone: rec.status === "PASS" ? "success" : "danger", title: "New inspection", msg: `${rec.id} · ${rec.product} — ${rec.status}` });
+  }
+
+  function scheduleLive() {
+    if (!state.live) return;
+    const delay = 5000 + Math.random() * 3000; // 5â€“8s
+    state.liveTimer = setTimeout(() => { addLiveInspection(true); scheduleLive(); }, delay);
+  }
+
+  function setLive(on) {
+    state.live = on;
+    $("#liveToggle").checked = on;
+    const m = $("#liveToggleMobile"); if (m) m.checked = on;
+    $("#offlinePill").classList.toggle("show", !on);
+    $("#navStatus").innerHTML = on
+      ? `<span class="dot dot-pulse"></span> Live Monitoring`
+      : `<span class="dot dot-pulse"></span> System Online`;
+    clearTimeout(state.liveTimer);
+    if (on) { scheduleLive(); toast({ tone: "info", title: "Live simulation on", msg: "New inspections will stream in automatically." }); }
+    else toast({ tone: "warn", title: "Live simulation paused", msg: "Automatic updates are off." });
+  }
+
+  /* ---------------------------------------------------------------- feed error state */
+  function showFeedError() {
+    $("#feedError").classList.add("show");
+    $("#feedEmpty").classList.remove("show");
+    const t = $("#feedTable"); if (t) t.style.display = "none";
+    $("#loadMoreBtn").style.display = "none";
+  }
+  function hideFeedError() { $("#feedError").classList.remove("show"); applyFilters(); }
+
+  /* ---------------------------------------------------------------- refresh */
+  function refreshFeed() {
+    const btn = $("#refreshBtn");
+    const ic = btn.querySelector("svg") || btn.querySelector("i");
+    if (ic && !RM) { ic.style.transition = "transform 0.7s ease"; ic.style.transform = "rotate(360deg)"; setTimeout(() => (ic.style.transform = ""), 720); }
+    const n = 1 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) addLiveInspection(false);
+    state.visible = INITIAL_VISIBLE;
+    applyFilters();
+    renderTable({ animate: true });
+    toast({ tone: "success", title: "Feed refreshed", msg: `${n} new inspection${n > 1 ? "s" : ""} received.` });
+  }
+
+  /* ---------------------------------------------------------------- events */
+  function wireEvents() {
+    // Search + filters
+    let sT;
+    $("#searchInput").addEventListener("input", (e) => {
+      clearTimeout(sT); const v = e.target.value;
+      sT = setTimeout(() => { state.filters.search = v; state.visible = INITIAL_VISIBLE; applyFilters(); }, 140);
+    });
+    $$(".seg [data-status]").forEach((b) => b.addEventListener("click", () => {
+      $$(".seg [data-status]").forEach((x) => x.classList.remove("active"));
+      b.classList.add("active");
+      state.filters.status = b.dataset.status; state.visible = INITIAL_VISIBLE; applyFilters();
+    }));
+    $("#locationFilter").addEventListener("change", (e) => { state.filters.location = e.target.value; state.visible = INITIAL_VISIBLE; applyFilters(); });
+
+    $("#loadMoreBtn").addEventListener("click", () => { state.visible += STEP; renderTable({ animate: true }); });
+    $("#refreshBtn").addEventListener("click", refreshFeed);
+    $("#retryBtn").addEventListener("click", () => { hideFeedError(); toast({ tone: "success", title: "Reconnected", msg: "Monitoring network restored." }); });
+    $("#clearFilters").addEventListener("click", () => {
+      state.filters = { search: "", status: "ALL", location: "ALL" };
+      $("#searchInput").value = ""; $("#locationFilter").value = "ALL";
+      $$(".seg [data-status]").forEach((x) => x.classList.toggle("active", x.dataset.status === "ALL"));
+      state.visible = INITIAL_VISIBLE; applyFilters();
+    });
+
+    // Table actions (delegated)
+    $("#feedBody").addEventListener("click", (e) => {
+      const v = e.target.closest("[data-view]"); const d = e.target.closest("[data-download]");
+      if (v) openModal(v.dataset.view);
+      else if (d) downloadReport(d.dataset.download);
+    });
+
+    // Modal
+    $("#modalClose").addEventListener("click", closeModal);
+    $("#modalCloseBtn").addEventListener("click", closeModal);
+    $("#modalDownload").addEventListener("click", (e) => downloadReport(e.currentTarget.dataset.download));
+    $("#modalBackdrop").addEventListener("click", (e) => { if (e.target === $("#modalBackdrop")) closeModal(); });
+
+    // Live toggle (desktop + mobile stay in sync)
+    $("#liveToggle").addEventListener("change", (e) => setLive(e.target.checked));
+    const lm = $("#liveToggleMobile"); if (lm) lm.addEventListener("change", (e) => setLive(e.target.checked));
+
+    // Smooth-scroll nav + mobile menu
+    $$("[data-scroll]").forEach((a) => a.addEventListener("click", () => {
+      const target = $(a.dataset.scroll); if (target) target.scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" });
+      closeMobileMenu();
+    }));
+    $("#menuBtn").addEventListener("click", () => {
+      const mm = $("#mobileMenu"); const open = mm.classList.toggle("open");
+      $("#menuBtn").setAttribute("aria-expanded", String(open));
+    });
+
+    // "Giggle" click bounce for every clay button (works on dynamic buttons too)
+    if (!RM) document.addEventListener("click", (e) => {
+      const b = e.target.closest(".clay-btn, .clay-icon");
+      if (!b) return;
+      b.classList.remove("giggle"); void b.offsetWidth; b.classList.add("giggle");
+      b.addEventListener("animationend", () => b.classList.remove("giggle"), { once: true });
+    });
+  }
+
+  function closeMobileMenu() { $("#mobileMenu").classList.remove("open"); $("#menuBtn").setAttribute("aria-expanded", "false"); }
+
+  /* ---------------------------------------------------------------- reveal observer */
+  function observeReveals() {
+    const els = $$(".reveal");
+    if (RM) { els.forEach((e) => e.classList.add("in")); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    els.forEach((e) => io.observe(e));
+  }
+
+  /* ---------------------------------------------------------------- debug hook
+     For the demo: run MetroDebug.streamError() in the console to preview the
+     "DATA STREAM INTERRUPTED" state, and MetroDebug.restore() to reconnect. */
+  window.MetroDebug = { streamError: () => { showFeedError(); toast({ tone: "danger", title: "Data stream interrupted", msg: "Monitoring network connection dropped." }); }, restore: hideFeedError };
+})();
+
+  </script>
 </body>
 </html>
