@@ -2,7 +2,10 @@ fastapi
 uvicorn
 pydantic
 python-multipart
-google-generativeai
+google-genai
 python-dotenv
 pillow
 reportlab
+easyocr
+opencv-python
+numpy
