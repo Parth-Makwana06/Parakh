@@ -1,5 +1,5 @@
-﻿import 'package:flutter/material.dart';
-import 'screens/scan_screen.dart';
+import 'package:flutter/material.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,14 +12,14 @@ class MetrologyLensApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MetrologyLens AI',
+      title: 'Parakh',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B365D)),
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         useMaterial3: true,
       ),
-      home: const ScanScreen(),
+      home: const SplashScreen(),
     );
   }
 }

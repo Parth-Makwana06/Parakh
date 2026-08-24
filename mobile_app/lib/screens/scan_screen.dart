@@ -239,8 +239,8 @@ class _ScanScreenState extends State<ScanScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'MetrologyLens AI',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
+                  'Parakh',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.0),
                 ),
                 Text(
                   'Field Inspector Portal • LMPC 2011',
@@ -257,16 +257,14 @@ class _ScanScreenState extends State<ScanScreen> {
             onPressed: _showServerConfigDialog,
           ),
           Container(
-            margin: const EdgeInsets.only(right: 12, top: 12, bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEA580C),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Center(
-              child: Text(
-                'InsightX',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+            margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.asset(
+                'assets/images/logo.jpg',
+                width: 38,
+                height: 38,
+                fit: BoxFit.cover,
               ),
             ),
           ),
