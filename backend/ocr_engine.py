@@ -1,19 +1,19 @@
 import os
-import cv2
-import easyocr
-import numpy as np
 
 # Initialize the EasyOCR Reader once (singleton pattern)
 _reader = None
 
 def get_reader():
     global _reader
+    import easyocr
     if _reader is None:
         # Load English and Hindi models
         _reader = easyocr.Reader(['en', 'hi'], gpu=False)
     return _reader
 
 def enhance_image_for_ocr(image_path: str):
+    import cv2
+    import numpy as np
     """
     Uses OpenCV CLAHE (Contrast Limited Adaptive Histogram Equalization)
     to remove plastic packaging glare and enhance text visibility.
