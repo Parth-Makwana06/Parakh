@@ -1,0 +1,32 @@
+﻿# Miscellaneous
+*.class
+*.log
+*.pyc
+__pycache__/
+.DS_Store
+.env
+
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+*.keystore
+
+# iOS / macOS
+ios/.symlinks/
+ios/Pods/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+
+# IDEs
+.idea/
+.vscode/
+*.iml
