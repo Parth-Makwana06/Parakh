@@ -90,18 +90,6 @@ flutter run
 `
 
 ---
-
-## 👥 Team InsightX — Roles & Responsibilities
-
-| Member | Role | Module | Tech Stack |
-|---|---|---|---|
-| **Parth** | Mobile App Lead | Field Inspector Mobile App | Flutter, Dart, CameraX, url_launcher |
-| **Darshil** | API Gateway Lead | REST APIs & Route Validation | FastAPI, Uvicorn, Python, CORS |
-| **Sneh** | Backend Engine Lead | OCR Pipeline, Rules & DB | OpenCV, EasyOCR, SQLite, ReportLab |
-| **Sujal** | Web Dashboard Lead | DoCA Central Analytics Portal | HTML5, Tailwind CSS, Chart.js, JS |
-| **Member 5** | AI / QA Testing Lead | Edge Case Tuning & OCR Testing | Python, Regex, Image Datasets |
-| **Member 6** | Legal & Pitch Lead | SIH Presentation & Legal Research | Legal Metrology Act 2009, PPT |
-
 ---
 
 ## 📜 License & Compliance
