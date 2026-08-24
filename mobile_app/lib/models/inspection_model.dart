@@ -9,11 +9,25 @@ class Violation {
     required this.description,
   });
 
-  factory Violation.fromJson(Map<String, dynamic> json) {
+  factory Violation.fromJson(dynamic json) {
+    if (json is String) {
+      return Violation(
+        rule: 'LMPC 2011 Rule Violation',
+        severity: 'HIGH',
+        description: json,
+      );
+    }
+    if (json is Map) {
+      return Violation(
+        rule: json['rule']?.toString() ?? 'LMPC 2011 Rule',
+        severity: json['severity']?.toString() ?? 'HIGH',
+        description: json['description']?.toString() ?? json['message']?.toString() ?? json['desc']?.toString() ?? '',
+      );
+    }
     return Violation(
-      rule: json['rule'] ?? 'Unknown Rule',
-      severity: json['severity'] ?? 'MEDIUM',
-      description: json['description'] ?? '',
+      rule: 'Rule Offense',
+      severity: 'WARNING',
+      description: json?.toString() ?? '',
     );
   }
 }
@@ -37,18 +51,18 @@ class ExtractedFields {
 
   factory ExtractedFields.fromJson(Map<String, dynamic> json) {
     return ExtractedFields(
-      mrp: json['mrp'],
-      netQty: json['net_qty'],
-      mfgDate: json['mfg_date'],
-      consumerPhone: json['consumer_phone'],
-      consumerEmail: json['consumer_email'],
-      mfgDeclaration: json['mfg_declaration'] ?? false,
+      mrp: json['mrp']?.toString() ?? json['MRP']?.toString() ?? json['price']?.toString(),
+      netQty: json['net_qty']?.toString() ?? json['Net_Quantity']?.toString() ?? json['net_quantity']?.toString() ?? json['quantity']?.toString(),
+      mfgDate: json['mfg_date']?.toString() ?? json['Mfg_Date']?.toString() ?? json['mfg']?.toString() ?? json['date']?.toString(),
+      consumerPhone: json['consumer_phone']?.toString() ?? json['Consumer_Care']?.toString() ?? json['care']?.toString() ?? json['phone']?.toString(),
+      consumerEmail: json['consumer_email']?.toString() ?? json['email']?.toString(),
+      mfgDeclaration: json['mfg_declaration'] == true || json['Manufacturer'] != null || json['mfg'] != null || json['address'] != null,
     );
   }
 }
 
 class InspectionResult {
-  final int? inspectionId;
+  final dynamic inspectionId;
   final String status;
   final int totalViolations;
   final List<Violation> violations;
@@ -67,11 +81,13 @@ class InspectionResult {
     final vList = rawList.map((v) => Violation.fromJson(v)).toList();
 
     return InspectionResult(
-      inspectionId: json['inspection_id'] is int ? json['inspection_id'] : int.tryParse(json['inspection_id']?.toString() ?? ''),
-      status: json['status'] ?? 'UNKNOWN',
-      totalViolations: json['total_violations'] ?? 0,
+      inspectionId: json['inspection_id'] ?? json['id'] ?? 1,
+      status: json['status']?.toString() ?? 'UNKNOWN',
+      totalViolations: json['total_violations'] is int ? json['total_violations'] : (vList.length),
       violations: vList,
-      extractedFields: ExtractedFields.fromJson(json['extracted_fields'] ?? {}),
+      extractedFields: ExtractedFields.fromJson(
+        json['extracted_fields'] is Map<String, dynamic> ? json['extracted_fields'] : {},
+      ),
     );
   }
 }
