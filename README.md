@@ -1,4 +1,4 @@
-﻿# ⚖️ Parakh — AI-Powered Legal Metrology (LMPC 2011) Inspection System
+﻿# ⚖️ MetrologyLens AI (Parakh) — LMPC 2011 Automated Compliance System
 
 > **Smart India Hackathon 2026** | **Problem Statement ID: 26034**  
 > **Ministry:** Ministry of Consumer Affairs, Food & Public Distribution (Department of Consumer Affairs - DoCA)  
@@ -103,13 +103,7 @@ flutter run
 `
 
 ---
+---
 
-## 👥 Team InsightX
-
-| Member | Role | Key Contribution |
-|---|---|---|
-| **Parth** | Flutter Mobile App Lead | Field Inspector Mobile Application UI & API Integration |
-| **Darshil** | API Gateway Lead | FastAPI REST Endpoints, Multipart Handlers & CORS |
-| **Sneh** | Backend Engine Lead | LMPC 2011 Rules Engine, OCR & PDF Notice Generator |
-| **Sujal** | Web Dashboard Lead | DoCA Central Analytics & Monitoring Portal |
-| **Members 5 & 6** | QA & Pitch Leads | SIH Pitch Presentation & Edge Case Label Datasets |
+## 📜 License & Compliance
+Developed for **Smart India Hackathon 2026** under the **Legal Metrology (Packaged Commodities) Rules, 2011**, Ministry of Consumer Affairs, Government of India.

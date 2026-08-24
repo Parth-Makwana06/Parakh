@@ -1,22 +1,24 @@
-﻿import os
+import os
 import shutil
-import json
+from typing import List, Dict, Any
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+import uvicorn
 
-from database import init_db, save_inspection, get_all_inspections
-from ocr_engine import extract_text_from_image
-from rule_validator import validate_lmpc_rules
-from pdf_generator import generate_legal_notice_pdf
+# Import core modules
+import ocr_engine
+import rule_validator
+import database
+import pdf_generator
 
 app = FastAPI(
-    title="Parakh - LMPC 2011 AI Inspection API",
-    description="Backend API for Legal Metrology (Packaged Commodities) Rules, 2011 Automated Inspection System",
+    title="MetrologyLens AI API Gateway",
+    description="Central API Gateway for Legal Metrology compliance verification system.",
     version="1.0.0"
 )
 
-# Enable CORS for Flutter Mobile App, Web, and Emulators
+# Enable CORS for all origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,82 +27,82 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+# Ensure upload directory exists
+UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-init_db()
 
-@app.get("/")
-def root():
-    return {
-        "status": "online",
-        "system": "Parakh - Legal Metrology AI Inspection Engine",
-        "team": "InsightX",
-        "endpoints": ["/api/scan", "/api/history", "/api/download-notice/{id}"]
-    }
-
-@app.post("/api/scan")
+@app.post("/api/scan", tags=["Scanner"], summary="Scan Product Image")
 async def scan_product(file: UploadFile = File(...)):
+    """
+    Accepts an uploaded image of a packaged commodity, runs OCR to extract text,
+    validates against Legal Metrology rules, saves the inspection log, and returns the result.
+    """
     try:
-        # 1. Save uploaded image from Flutter app
-        file_location = os.path.join(UPLOAD_DIR, file.filename)
-        with open(file_location, "wb") as buffer:
+        # 1. Save uploaded image to local 'uploads/' directory
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-            
-        # 2. Run OCR Extraction
-        ocr_result = extract_text_from_image(file_location)
-        
-        # 3. Validate against LMPC 2011 Rules
-        compliance_result = validate_lmpc_rules(ocr_result["raw_text"])
-        
-        # 4. Save to Database
-        record_id = save_inspection(
-            product_name=compliance_result["extracted_fields"].get("product_name", "Packaged Commodity"),
-            brand=compliance_result["extracted_fields"].get("brand", "Standard Brand"),
-            mrp=compliance_result["extracted_fields"].get("mrp", "N/A"),
-            net_qty=compliance_result["extracted_fields"].get("net_qty", "N/A"),
-            mfg_date=compliance_result["extracted_fields"].get("mfg_date", "N/A"),
-            status=compliance_result["status"],
-            count=compliance_result["total_violations"],
-            violations_json=json.dumps(compliance_result["violations"]),
-            extracted_json=json.dumps(compliance_result["extracted_fields"]),
-            image_path=file_location
+
+        # 2. Extract raw text and bounding boxes using OCR engine
+        ocr_result = ocr_engine.extract_text_from_image(file_path)
+        raw_text = ocr_result.get("raw_text", "")
+
+        # 3. Validate rules to determine Pass/Fail and violations
+        validation_result = rule_validator.validate_lmpc_rules(raw_text)
+        status = validation_result.get("status", "Fail")
+        total_violations = validation_result.get("total_violations", 0)
+        violations_list = validation_result.get("violations_list", [])
+        extracted_fields = validation_result.get("extracted_fields", {})
+
+        # 4. Save the inspection log into SQLite
+        inspection_id = database.save_inspection(
+            status=status,
+            total_violations=total_violations,
+            violations_list=violations_list,
+            extracted_fields=extracted_fields,
+            image_path=file_path
         )
-        
-        compliance_result["inspection_id"] = record_id
-        compliance_result["image_path"] = file_location
-        compliance_result["ocr_text"] = ocr_result["raw_text"]
-        return compliance_result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}")
 
-@app.get("/api/history")
-def fetch_history():
-    rows = get_all_inspections()
-    history = []
-    for r in rows:
-        history.append({
-            "id": r[0],
-            "product_name": r[1],
-            "brand": r[2],
-            "mrp": r[3],
-            "net_qty": r[4],
-            "mfg_date": r[5],
-            "status": r[6],
-            "violations_count": r[7],
-            "violations": json.loads(r[8]) if r[8] else [],
-            "extracted_fields": json.loads(r[9]) if r[9] else {},
-            "image_path": r[10],
-            "timestamp": r[11]
+        # 5. Return structured JSON response
+        return JSONResponse(content={
+            "inspection_id": inspection_id,
+            "status": status,
+            "total_violations": total_violations,
+            "violations_list": violations_list,
+            "extracted_fields": extracted_fields
         })
-    return {"inspections": history, "total": len(history)}
 
-@app.get("/api/download-notice/{inspection_id}")
-def download_pdf(inspection_id: int):
-    pdf_path = generate_legal_notice_pdf(inspection_id)
-    if os.path.exists(pdf_path):
-        return FileResponse(pdf_path, media_type='application/pdf', filename=f"Legal_Notice_{inspection_id}.pdf")
-    raise HTTPException(status_code=404, detail="Inspection Notice PDF not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/history", tags=["History"], summary="Get Inspection History")
+async def get_history():
+    """
+    Retrieves all past inspection records for the Web Dashboard.
+    """
+    try:
+        inspections = database.get_all_inspections()
+        return inspections
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/download-notice/{inspection_id}", tags=["Notices"], summary="Download Legal Notice PDF")
+async def download_notice(inspection_id: str):
+    """
+    Generates and returns a downloadable legal notice PDF for a given inspection ID.
+    """
+    try:
+        pdf_path = pdf_generator.generate_legal_notice_pdf(inspection_id)
+        if not os.path.exists(pdf_path):
+            raise HTTPException(status_code=404, detail="Notice could not be generated or found.")
+        
+        return FileResponse(
+            path=pdf_path,
+            media_type="application/pdf",
+            filename=f"Legal_Notice_{inspection_id}.pdf"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
