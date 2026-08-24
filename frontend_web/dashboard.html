@@ -719,12 +719,12 @@
       if (!res.ok) throw new Error("DATA STREAM INTERRUPTED");
       const raw = await res.json();
       if (raw.length === 0) {
-        return buildSeedInspections(); // Fallback if no real data
+        return []; // No real data yet, return empty list instead of dummy
       }
       return raw.map(normalizeApiRecord);
     } catch (e) {
-      console.warn("Using mock data because real API failed: ", e);
-      return buildSeedInspections();
+      console.warn("API failed, keeping previous data or showing empty list: ", e);
+      return null; // Return null on error so we don't blank out existing data
     }
   }
 
@@ -833,7 +833,7 @@
       window.MetroData.getInspectionData(),
       Promise.resolve(window.MetroData.getNationalStats()),
     ]);
-    state.inspections = records;
+    if (records !== null) { state.inspections = records; }
     state.stats = stats;
   }
 
