@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import '../models/inspection_model.dart';
 
 class ApiService {
-  // 💡 Default to Laptop Wi-Fi IP for seamless Wireless testing:
-  static String customUrl = 'http://192.168.0.214:8000';
+  // 💡 Default to USB ADB Reverse (127.0.0.1:8000) for instant 100% reliable connection:
+  static String customUrl = 'http://127.0.0.1:8000';
 
   // Test Server Health Connection
   static Future<bool> testConnection(String url) async {
