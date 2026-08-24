@@ -108,6 +108,65 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
+  void _showServerConfigDialog() {
+    final controller = TextEditingController(text: ApiService.customUrl);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('⚙️ Server Endpoint URL', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Choose or enter your FastAPI Server URL:', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 10),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                isDense: true,
+                hintText: 'http://127.0.0.1:8000',
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              children: [
+                ActionChip(
+                  label: const Text('USB (127.0.0.1:8000)'),
+                  onPressed: () => controller.text = 'http://127.0.0.1:8000',
+                ),
+                ActionChip(
+                  label: const Text('Wi-Fi (192.168.0.214:8000)'),
+                  onPressed: () => controller.text = 'http://192.168.0.214:8000',
+                ),
+                ActionChip(
+                  label: const Text('Emulator (10.0.2.2:8000)'),
+                  onPressed: () => controller.text = 'http://10.0.2.2:8000',
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                ApiService.customUrl = controller.text.trim();
+              });
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Updated Server: ${ApiService.customUrl}')),
+              );
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const themeColor = Color(0xFF1B365D);
@@ -137,8 +196,13 @@ class _ScanScreenState extends State<ScanScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_ethernet, color: Colors.white, size: 20),
+            tooltip: 'Server Settings',
+            onPressed: _showServerConfigDialog,
+          ),
           Container(
-            margin: const EdgeInsets.only(right: 14, top: 12, bottom: 12),
+            margin: const EdgeInsets.only(right: 12, top: 12, bottom: 12),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: const Color(0xFFEA580C),
