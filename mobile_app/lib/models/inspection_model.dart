@@ -1,4 +1,4 @@
-﻿class Violation {
+class Violation {
   final String rule;
   final String severity;
   final String description;
@@ -63,12 +63,11 @@ class InspectionResult {
   });
 
   factory InspectionResult.fromJson(Map<String, dynamic> json) {
-    var vList = (json['violations'] as List? ?? [])
-        .map((v) => Violation.fromJson(v))
-        .toList();
+    final rawList = (json['violations'] as List?) ?? (json['violations_list'] as List?) ?? [];
+    final vList = rawList.map((v) => Violation.fromJson(v)).toList();
 
     return InspectionResult(
-      inspectionId: json['inspection_id'],
+      inspectionId: json['inspection_id'] is int ? json['inspection_id'] : int.tryParse(json['inspection_id']?.toString() ?? ''),
       status: json['status'] ?? 'UNKNOWN',
       totalViolations: json['total_violations'] ?? 0,
       violations: vList,
