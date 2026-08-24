@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DoCA - National Legal Metrology Monitoring Portal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .metric-card {
+            transition: transform 0.2s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+        /* Custom scrollbar for the table */
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.5); 
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="glass-card sticky top-0 z-50 border-b border-slate-700 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-4">
+                    <div class="bg-blue-600 p-2 rounded-lg">
+                        <i data-lucide="scale" class="text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-white tracking-tight">National Legal Metrology Monitoring Portal</h1>
+                        <p class="text-xs text-slate-400">Department of Consumer Affairs (DoCA)</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">
+                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span class="text-sm font-medium text-slate-300">Live System</span>
+                    </div>
+                    <span class="px-3 py-1 rounded-md bg-blue-500/20 text-blue-400 text-sm font-bold border border-blue-500/30">
+                        Team InsightX
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Card 1 -->
+            <div class="glass-card rounded-xl p-6 metric-card shadow-lg border-t-4 border-t-blue-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-slate-400">Total Inspections</p>
+                        <h3 class="text-3xl font-bold text-white mt-1" id="val-total">-</h3>
+                    </div>
+                    <div class="p-3 rounded-lg bg-blue-500/20">
+                        <i data-lucide="scan-line" class="text-blue-400"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mt-4">Scanned by Field Officers Today</p>
+            </div>
+            
+            <!-- Card 2 -->
+            <div class="glass-card rounded-xl p-6 metric-card shadow-lg border-t-4 border-t-emerald-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-slate-400">Compliant Packages</p>
+                        <h3 class="text-3xl font-bold text-emerald-400 mt-1" id="val-pass">-</h3>
+                    </div>
+                    <div class="p-3 rounded-lg bg-emerald-500/20">
+                        <i data-lucide="check-circle-2" class="text-emerald-400"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mt-4">Fully LMPC 2011 Compliant</p>
+            </div>
+            
+            <!-- Card 3 -->
+            <div class="glass-card rounded-xl p-6 metric-card shadow-lg border-t-4 border-t-rose-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-slate-400">Total Violations Flagged</p>
+                        <h3 class="text-3xl font-bold text-rose-400 mt-1" id="val-fail">-</h3>
+                    </div>
+                    <div class="p-3 rounded-lg bg-rose-500/20">
+                        <i data-lucide="alert-triangle" class="text-rose-400"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mt-4">Action Required Instantly</p>
+            </div>
+            
+            <!-- Card 4 -->
+            <div class="glass-card rounded-xl p-6 metric-card shadow-lg border-t-4 border-t-amber-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-slate-400">National Compliance Rate</p>
+                        <h3 class="text-3xl font-bold text-amber-400 mt-1" id="val-rate">-</h3>
+                    </div>
+                    <div class="p-3 rounded-lg bg-amber-500/20">
+                        <i data-lucide="pie-chart" class="text-amber-400"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mt-4">Percentage of Compliant Scans</p>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Side: Table (65%) -->
+            <div class="lg:col-span-8 glass-card rounded-xl shadow-lg flex flex-col h-[500px]">
+                <div class="p-6 border-b border-slate-700 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="activity" class="w-5 h-5 text-blue-400"></i>
+                        Live Inspection Feed
+                    </h2>
+                    <span class="text-xs text-slate-400">Auto-updating every 3s</span>
+                </div>
+                <div class="p-0 flex-1 overflow-auto table-container">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-800/50 sticky top-0 z-10">
+                            <tr>
+                                <th class="py-4 px-6 text-xs font-semibold text-slate-300 uppercase tracking-wider">ID</th>
+                                <th class="py-4 px-6 text-xs font-semibold text-slate-300 uppercase tracking-wider">Product</th>
+                                <th class="py-4 px-6 text-xs font-semibold text-slate-300 uppercase tracking-wider">Net Qty</th>
+                                <th class="py-4 px-6 text-xs font-semibold text-slate-300 uppercase tracking-wider">MRP</th>
+                                <th class="py-4 px-6 text-xs font-semibold text-slate-300 uppercase tracking-wider">Status</th>
+                                <th class="py-4 px-6 text-xs font-semibold text-slate-300 uppercase tracking-wider text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-700/50">
+                            <!-- Rows will be injected here via JS -->
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-slate-500">Loading live data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Right Side: Chart (35%) -->
+            <div class="lg:col-span-4 glass-card rounded-xl shadow-lg flex flex-col h-[500px]">
+                <div class="p-6 border-b border-slate-700">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="donut" class="w-5 h-5 text-amber-400"></i>
+                        Compliance Analytics
+                    </h2>
+                </div>
+                <div class="p-6 flex-1 flex items-center justify-center relative">
+                    <canvas id="complianceChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Chart.js Setup
+        const ctx = document.getElementById('complianceChart').getContext('2d');
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        
+        let complianceChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Compliant (Pass)', 'Violations (Fail)'],
+                datasets: [{
+                    data: [1, 1], // Placeholder
+                    backgroundColor: ['#10b981', '#f43f5e'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' }
+                    }
+                }
+            }
+        });
+
+        const API_URL = "http://127.0.0.1:8000";
+
+        // Logic to fetch data and update UI
+        async function fetchAndUpdateDashboard() {
+            try {
+                const response = await fetch(`${API_URL}/api/history`);
+                if (!response.ok) throw new Error("Network error");
+                const data = await response.json();
+                
+                // Calculate Metrics
+                const total = data.length;
+                const pass = data.filter(d => d.status.toUpperCase() === 'PASS').length;
+                const fail = total - pass;
+                const rate = total === 0 ? 0 : Math.round((pass / total) * 100);
+
+                // Update Cards
+                document.getElementById('val-total').innerText = total;
+                document.getElementById('val-pass').innerText = pass;
+                document.getElementById('val-fail').innerText = fail;
+                document.getElementById('val-rate').innerText = `${rate}%`;
+
+                // Update Chart
+                complianceChart.data.datasets[0].data = [pass, fail === 0 && pass === 0 ? 1 : fail];
+                complianceChart.update();
+
+                // Update Table
+                const tbody = document.getElementById('table-body');
+                tbody.innerHTML = ''; // clear loading state
+
+                if (total === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-500">No inspections logged yet.</td></tr>`;
+                    return;
+                }
+
+                data.forEach(row => {
+                    const fields = row.extracted_fields || {};
+                    const isPass = row.status.toUpperCase() === 'PASS';
+                    const badgeClass = isPass 
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
+                        : 'bg-rose-500/20 text-rose-400 border-rose-500/30';
+                    const icon = isPass ? 'check-circle-2' : 'alert-circle';
+                    const statusText = isPass ? 'PASS' : 'FAIL';
+                    
+                    const mrp = fields.MRP || 'N/A';
+                    const qty = fields.Net_Quantity || 'N/A';
+                    const idShort = row.inspection_id.substring(0,6).toUpperCase();
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-700/30 transition-colors";
+                    tr.innerHTML = `
+                        <td class="py-4 px-6 text-sm font-mono text-slate-300">#${idShort}</td>
+                        <td class="py-4 px-6 text-sm text-white font-medium">Scanned Item</td>
+                        <td class="py-4 px-6 text-sm text-slate-400">${qty}</td>
+                        <td class="py-4 px-6 text-sm text-slate-400">${mrp}</td>
+                        <td class="py-4 px-6">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border ${badgeClass}">
+                                <i data-lucide="${icon}" class="w-3.5 h-3.5"></i>
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <a href="${API_URL}/api/download-notice/${row.inspection_id}" target="_blank" class="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 transition-colors font-medium">
+                                <i data-lucide="file-text" class="w-4 h-4"></i>
+                                PDF
+                            </a>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                // Re-initialize icons for new rows
+                lucide.createIcons();
+
+            } catch (error) {
+                console.error("Dashboard Auto-Refresh Failed:", error);
+            }
+        }
+
+        // Initial Load
+        fetchAndUpdateDashboard();
+
+        // Auto-refresh every 3 seconds (3000 ms)
+        setInterval(fetchAndUpdateDashboard, 3000);
+    </script>
+</body>
+</html>
