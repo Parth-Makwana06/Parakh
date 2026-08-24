@@ -1,4 +1,4 @@
-﻿# ⚖️ MetrologyLens AI (NiyamScan) — LMPC 2011 Automated Compliance System
+﻿# ⚖️ MetrologyLens AI (Parakh) — LMPC 2011 Automated Compliance System
 
 > **Smart India Hackathon 2026** | **Problem Statement ID: 26034**  
 > **Ministry:** Ministry of Consumer Affairs, Food & Public Distribution (Department of Consumer Affairs - DoCA)  
