@@ -45,7 +45,7 @@ async def serve_dashboard():
     """
     Serves the beautiful Parakh HTML dashboard.
     """
-    html_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "parakh.html")
+    html_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates", "dashboard.html")
     if os.path.exists(html_path):
         return FileResponse(html_path)
     return HTMLResponse("Dashboard file not found", status_code=404)
