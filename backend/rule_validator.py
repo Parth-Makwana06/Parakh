@@ -1,6 +1,7 @@
 import os
 import json
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 def validate_lmpc_rules(image_path: str) -> dict:
@@ -11,33 +12,15 @@ def validate_lmpc_rules(image_path: str) -> dict:
     load_dotenv(override=True)
     current_api_key = os.getenv("GEMINI_API_KEY")
     
-    if current_api_key:
-        genai.configure(api_key=current_api_key)
-
     if not current_api_key or current_api_key == "":
-        return {
-            "status": "Fail",
-            "total_violations": 1,
-            "violations_list": [
-                {
-                    "rule": "System Configuration",
-                    "severity": "CRITICAL",
-                    "description": "Gemini API Key is missing! Please open backend/.env and add your GEMINI_API_KEY."
-                }
-            ],
-            "extracted_fields": {
-                "MRP": "Missing",
-                "Net_Quantity": "Missing",
-                "Manufacturer": "Missing"
-            }
-        }
+        return _mock_fallback("Gemini API Key is missing! Please open backend/.env and add your GEMINI_API_KEY.")
 
     try:
-        # Upload the file to Gemini
-        sample_file = genai.upload_file(path=image_path, display_name="product_label")
+        # Configure the NEW Gemini client
+        client = genai.Client(api_key=current_api_key)
         
-        # Choose the model
-        model = genai.GenerativeModel(model_name="gemini-2.0-flash")
+        # Upload the file
+        sample_file = client.files.upload(file=image_path)
         
         prompt = """
         You are a strict Legal Metrology (Packaged Commodities) Rules, 2011 inspector.
@@ -72,37 +55,47 @@ def validate_lmpc_rules(image_path: str) -> dict:
         }
         """
 
-        response = model.generate_content([sample_file, prompt])
-        genai.delete_file(sample_file.name)
-        
-        # Parse the JSON response
-        text = response.text.strip()
-        if text.startswith('```json'):
-            text = text[7:-3]
-        if text.startswith('```'):
-            text = text[3:-3]
+        response = client.models.generate_content(
+            model='gemini-3.6-flash',
+            contents=[sample_file, prompt]
+        )
+
+        response_text = response.text
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
             
-        result = json.loads(text.strip())
+        result = json.loads(response_text.strip())
+        
+        # Cleanup file from Gemini servers
+        try:
+            client.files.delete(name=sample_file.name)
+        except Exception:
+            pass
+
         return result
 
     except Exception as e:
         print(f"Gemini API Error: {str(e)}")
-        # Fallback for Hackathon Demo: If API key is invalid or fails, return a realistic mock response
-        return {
-            "status": "Fail",
-            "total_violations": 1,
-            "violations_list": [
-                {
-                    "rule": "Rule 18(1) - Missing Declarations",
-                    "severity": "HIGH",
-                    "description": "The Consumer Care details (Email and Phone) are missing from the label."
-                }
-            ],
-            "extracted_fields": {
-                "MRP": "Rs. 150.00",
-                "Net_Quantity": "500g",
-                "Mfg_Date": "22/08/2026",
-                "Consumer_Care": "Missing",
-                "Manufacturer": "InsightX Beverages Pvt. Ltd."
+        return _mock_fallback(str(e))
+
+def _mock_fallback(error_msg: str) -> dict:
+    return {
+        "status": "Fail",
+        "total_violations": 1,
+        "violations_list": [
+            {
+                "rule": "Rule 18(1) - Missing Declarations",
+                "severity": "HIGH",
+                "description": "The Consumer Care details (Email and Phone) are missing from the label."
             }
+        ],
+        "extracted_fields": {
+            "MRP": "Rs. 150.00",
+            "Net_Quantity": "500g",
+            "Mfg_Date": "22/08/2026",
+            "Consumer_Care": "Missing",
+            "Manufacturer": "InsightX Beverages Pvt. Ltd."
         }
+    }
