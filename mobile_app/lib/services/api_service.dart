@@ -1,21 +1,18 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../models/inspection_model.dart';
 
 class ApiService {
-  // 💡 IP CONFIGURATION FOR PHYSICAL PHONE & EMULATOR:
-  // - Tamara Laptop nu Wi-Fi IP: 'http://192.168.0.214:8000'
-  // - USB reverse / Localhost: 'http://127.0.0.1:8000'
-  // - Emulator: 'http://10.0.2.2:8000'
-  static const String primaryUrl = 'http://127.0.0.1:8000';
+  // 💡 Auto-Endpoints (Wi-Fi IP, USB Reverse ADB, Emulator):
   static const String wifiUrl = 'http://192.168.0.214:8000';
+  static const String localhostUrl = 'http://127.0.0.1:8000';
   static const String emulatorUrl = 'http://10.0.2.2:8000';
 
   static String activeBaseUrl = wifiUrl;
 
-  static Future<InspectionResult> scanProductImage(File imageFile) async {
-    final candidateUrls = [wifiUrl, primaryUrl, emulatorUrl];
+  static Future<InspectionResult> scanProductBytes(Uint8List bytes, String filename) async {
+    final candidateUrls = [wifiUrl, localhostUrl, emulatorUrl];
     Exception? lastException;
 
     for (final baseUrl in candidateUrls) {
@@ -24,10 +21,14 @@ class ApiService {
         final request = http.MultipartRequest('POST', uri);
 
         request.files.add(
-          await http.MultipartFile.fromPath('file', imageFile.path),
+          http.MultipartFile.fromBytes(
+            'file',
+            bytes,
+            filename: filename,
+          ),
         );
 
-        final streamedResponse = await request.send().timeout(const Duration(seconds: 10));
+        final streamedResponse = await request.send().timeout(const Duration(seconds: 12));
         final response = await http.Response.fromStream(streamedResponse);
 
         if (response.statusCode == 200) {

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -13,34 +13,67 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanScreenState extends State<ScanScreen> {
-  File? _image;
+  XFile? _pickedFile;
+  Uint8List? _imageBytes;
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   InspectionResult? _result;
   String? _errorMessage;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkLostData();
+  }
+
+  // Handle Android Activity Recreation
+  Future<void> _checkLostData() async {
+    try {
+      final LostDataResponse response = await _picker.retrieveLostData();
+      if (response.isEmpty) return;
+      if (response.file != null) {
+        final bytes = await response.file!.readAsBytes();
+        setState(() {
+          _pickedFile = response.file;
+          _imageBytes = bytes;
+          _result = null;
+          _errorMessage = null;
+        });
+      }
+    } catch (e) {
+      debugPrint("Lost data error: $e");
+    }
+  }
+
+  // Pick Image from Camera or Gallery
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(
+      final XFile? file = await _picker.pickImage(
         source: source,
-        imageQuality: 90,
+        maxWidth: 1280,
+        maxHeight: 1280,
+        imageQuality: 85,
       );
-      if (pickedFile != null) {
+
+      if (file != null) {
+        final bytes = await file.readAsBytes();
         setState(() {
-          _image = File(pickedFile.path);
+          _pickedFile = file;
+          _imageBytes = bytes;
           _result = null;
           _errorMessage = null;
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to capture image: ';
+        _errorMessage = 'Error capturing image: $e';
       });
     }
   }
 
+  // Analyze Image with Backend API
   Future<void> _analyzeImage() async {
-    if (_image == null) return;
+    if (_pickedFile == null && _imageBytes == null) return;
 
     setState(() {
       _isLoading = true;
@@ -48,7 +81,10 @@ class _ScanScreenState extends State<ScanScreen> {
     });
 
     try {
-      final result = await ApiService.scanProductImage(_image!);
+      final result = await ApiService.scanProductBytes(
+        _imageBytes!,
+        _pickedFile?.name ?? 'label_scan.jpg',
+      );
       setState(() {
         _result = result;
         _isLoading = false;
@@ -56,12 +92,13 @@ class _ScanScreenState extends State<ScanScreen> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Connection Error: Make sure FastAPI server is running!\n()';
+        _errorMessage = 'Connection Error: Make sure FastAPI server is running!\n($e)';
       });
     }
   }
 
-  Future<void> _downloadPdf(int id) async {
+  // Download PDF Legal Notice
+  Future<void> _downloadPdf(dynamic id) async {
     final url = Uri.parse(ApiService.getPdfDownloadUrl(id));
     final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
     if (!launched && mounted) {
@@ -121,7 +158,7 @@ class _ScanScreenState extends State<ScanScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Camera / Upload Buttons
+            // 1. Capture Buttons
             Row(
               children: [
                 Expanded(
@@ -153,8 +190,8 @@ class _ScanScreenState extends State<ScanScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Preview & Scan Trigger
-            if (_image != null) ...[
+            // 2. Image Preview Card
+            if (_imageBytes != null) ...[
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
@@ -167,7 +204,12 @@ class _ScanScreenState extends State<ScanScreen> {
                   children: [
                     ClipRRect(
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                      child: Image.file(_image!, height: 220, width: double.infinity, fit: BoxFit.cover),
+                      child: Image.memory(
+                        _imageBytes!,
+                        height: 240,
+                        width: double.infinity,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(12.0),
@@ -196,7 +238,7 @@ class _ScanScreenState extends State<ScanScreen> {
               const SizedBox(height: 16),
             ],
 
-            // Error Notice
+            // 3. Error Alert
             if (_errorMessage != null)
               Container(
                 padding: const EdgeInsets.all(14),
@@ -214,7 +256,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 ),
               ),
 
-            // Result Display
+            // 4. Results View
             if (_result != null) ...[
               _buildStatusCard(_result!),
               const SizedBox(height: 14),
@@ -242,7 +284,7 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Widget _buildStatusCard(InspectionResult result) {
-    final isCompliant = result.status == 'COMPLIANT';
+    final isCompliant = result.status.toLowerCase() == 'pass' || result.status.toLowerCase() == 'compliant';
     final bgColor = isCompliant ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2);
     final borderColor = isCompliant ? const Color(0xFF86EFAC) : const Color(0xFFFCA5A5);
     final textColor = isCompliant ? const Color(0xFF166534) : const Color(0xFF991B1B);
@@ -269,7 +311,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 Text(
                   isCompliant
                       ? 'All mandatory declarations meet Legal Metrology Rules, 2011.'
-                      : ' Legal Violation(s) flagged on this package.',
+                      : '${result.totalViolations} Legal Violation(s) flagged on this package.',
                   style: TextStyle(color: textColor.withValues(alpha: 0.9), fontSize: 12),
                 ),
               ],
