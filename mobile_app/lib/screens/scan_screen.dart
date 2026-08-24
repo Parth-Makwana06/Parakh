@@ -362,23 +362,36 @@ class _ScanScreenState extends State<ScanScreen> {
                     if (_result == null)
                       Padding(
                         padding: const EdgeInsets.all(12.0),
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _analyzeImage,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2563EB),
-                            minimumSize: const Size(double.infinity, 48),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: _isLoading
-                              ? const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
-                                    SizedBox(width: 12),
-                                    Text('Running OCR & Rule Engine...', style: TextStyle(color: Colors.white)),
-                                  ],
-                                )
-                              : const Text('🔍 Analyze Compliance (LMPC 2011)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: OutlinedButton.icon(
+                                onPressed: _isLoading ? null : () => _pickImage(ImageSource.camera),
+                                icon: const Icon(Icons.add_a_photo, size: 18),
+                                label: const Text('Add', style: TextStyle(fontWeight: FontWeight.bold)),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 2,
+                              child: ElevatedButton(
+                                onPressed: _isLoading ? null : _analyzeImage,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2563EB),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                child: _isLoading
+                                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                    : const Text('🔍 Analyze', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                   ],
@@ -509,14 +522,19 @@ class _ScanScreenState extends State<ScanScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: isFound ? const Color(0xFF1E293B) : const Color(0xFFDC2626),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isFound ? const Color(0xFF1E293B) : const Color(0xFFDC2626),
+              ),
             ),
           ),
         ],
