@@ -76,9 +76,10 @@ def scan_product(file: UploadFile = File(None), files: List[UploadFile] = File(N
                 shutil.copyfileobj(f.file, buffer)
             file_paths.append(f_path)
 
-        # 2. Extract raw text and bounding boxes using OCR engine (using first image for now)
-        ocr_result = ocr_engine.extract_text_from_image(file_paths[0])
-        raw_text = ocr_result.get("raw_text", "")
+        # Skip local EasyOCR inference to prevent 100MB model download & CPU lag.
+        # Gemini 3.6 Flash natively extracts text and layout perfectly.
+        # ocr_result = ocr_engine.extract_text_from_image(file_paths[0])
+        raw_text = ""
 
         # 2. Rule Validation using Gemini AI (passing all images)
         validation_result = rule_validator.validate_lmpc_rules(file_paths)
