@@ -3,18 +3,18 @@ import json
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-load_dotenv()
-
-# Configure Gemini
-api_key = os.getenv("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
-
 def validate_lmpc_rules(image_path: str) -> dict:
     """
     Uses Gemini AI to perform OCR and LMPC 2011 rule validation on the image.
     """
-    if not api_key or api_key == "":
+    import importlib
+    load_dotenv(override=True)
+    current_api_key = os.getenv("GEMINI_API_KEY")
+    
+    if current_api_key:
+        genai.configure(api_key=current_api_key)
+
+    if not current_api_key or current_api_key == "":
         return {
             "status": "Fail",
             "total_violations": 1,
