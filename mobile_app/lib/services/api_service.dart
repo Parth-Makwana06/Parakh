@@ -19,7 +19,7 @@ class ApiService {
   }
 
   // Scan Product Multipart
-  static Future<InspectionResult> scanProductBytes(Uint8List bytes, String filename) async {
+  static Future<InspectionResult> scanProductFiles(List<Map<String, dynamic>> files) async {
     final targetUrl = customUrl.trim().endsWith('/')
         ? customUrl.trim().substring(0, customUrl.trim().length - 1)
         : customUrl.trim();
@@ -28,13 +28,15 @@ class ApiService {
       final uri = Uri.parse('$targetUrl/api/scan');
       final request = http.MultipartRequest('POST', uri);
 
-      request.files.add(
-        http.MultipartFile.fromBytes(
-          'file',
-          bytes,
-          filename: filename,
-        ),
-      );
+      for (var file in files) {
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'files',
+            file['bytes'],
+            filename: file['filename'],
+          ),
+        );
+      }
 
       final streamedResponse = await request.send().timeout(const Duration(seconds: 60));
       final response = await http.Response.fromStream(streamedResponse);

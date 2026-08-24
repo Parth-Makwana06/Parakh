@@ -13,8 +13,8 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanScreenState extends State<ScanScreen> {
-  XFile? _pickedFile;
-  Uint8List? _imageBytes;
+  List<XFile> _pickedFiles = [];
+  List<Uint8List> _imageBytesList = [];
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   InspectionResult? _result;
@@ -33,8 +33,8 @@ class _ScanScreenState extends State<ScanScreen> {
       if (response.file != null) {
         final bytes = await response.file!.readAsBytes();
         setState(() {
-          _pickedFile = response.file;
-          _imageBytes = bytes;
+          _pickedFiles.add(response.file!);
+          _imageBytesList.add(bytes);
           _result = null;
           _errorMessage = null;
         });
@@ -46,21 +46,39 @@ class _ScanScreenState extends State<ScanScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final XFile? file = await _picker.pickImage(
-        source: source,
-        maxWidth: 1280,
-        maxHeight: 1280,
-        imageQuality: 85,
-      );
-
-      if (file != null) {
-        final bytes = await file.readAsBytes();
-        setState(() {
-          _pickedFile = file;
-          _imageBytes = bytes;
-          _result = null;
-          _errorMessage = null;
-        });
+      if (source == ImageSource.gallery) {
+        final List<XFile> files = await _picker.pickMultiImage(
+          maxWidth: 1280,
+          maxHeight: 1280,
+          imageQuality: 85,
+        );
+        if (files.isNotEmpty) {
+          for (var file in files) {
+            final bytes = await file.readAsBytes();
+            _pickedFiles.add(file);
+            _imageBytesList.add(bytes);
+          }
+          setState(() {
+            _result = null;
+            _errorMessage = null;
+          });
+        }
+      } else {
+        final XFile? file = await _picker.pickImage(
+          source: source,
+          maxWidth: 1280,
+          maxHeight: 1280,
+          imageQuality: 85,
+        );
+        if (file != null) {
+          final bytes = await file.readAsBytes();
+          setState(() {
+            _pickedFiles.add(file);
+            _imageBytesList.add(bytes);
+            _result = null;
+            _errorMessage = null;
+          });
+        }
       }
     } catch (e) {
       setState(() {
@@ -70,7 +88,7 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Future<void> _analyzeImage() async {
-    if (_imageBytes == null) return;
+    if (_imageBytesList.isEmpty) return;
 
     setState(() {
       _isLoading = true;
@@ -78,10 +96,15 @@ class _ScanScreenState extends State<ScanScreen> {
     });
 
     try {
-      final result = await ApiService.scanProductBytes(
-        _imageBytes!,
-        _pickedFile?.name ?? 'label_scan.jpg',
-      );
+      List<Map<String, dynamic>> filesData = [];
+      for (int i = 0; i < _pickedFiles.length; i++) {
+        filesData.add({
+          'bytes': _imageBytesList[i],
+          'filename': _pickedFiles[i].name
+        });
+      }
+
+      final result = await ApiService.scanProductFiles(filesData);
       setState(() {
         _result = result;
         _isLoading = false;
@@ -96,8 +119,8 @@ class _ScanScreenState extends State<ScanScreen> {
 
   void _resetScan() {
     setState(() {
-      _imageBytes = null;
-      _pickedFile = null;
+      _imageBytesList.clear();
+      _pickedFiles.clear();
       _result = null;
       _errorMessage = null;
     });
@@ -255,7 +278,7 @@ class _ScanScreenState extends State<ScanScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 1. Capture Buttons (Only if no image is loaded)
-            if (_imageBytes == null)
+            if (_imageBytesList.isEmpty)
               Row(
                 children: [
                   Expanded(
@@ -285,10 +308,10 @@ class _ScanScreenState extends State<ScanScreen> {
                   ),
                 ],
               ),
-            if (_imageBytes == null) const SizedBox(height: 16),
+            if (_imageBytesList.isEmpty) const SizedBox(height: 16),
 
             // 2. Image Preview Card
-            if (_imageBytes != null) ...[
+            if (_imageBytesList.isNotEmpty) ...[
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
@@ -303,11 +326,25 @@ class _ScanScreenState extends State<ScanScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                          child: Image.memory(
-                            _imageBytes!,
+                          child: SizedBox(
                             height: 240,
-                            width: double.infinity,
-                            fit: BoxFit.contain,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _imageBytesList.length,
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.memory(
+                                      _imageBytesList[index],
+                                      height: 232,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ),
                         if (_result == null)
