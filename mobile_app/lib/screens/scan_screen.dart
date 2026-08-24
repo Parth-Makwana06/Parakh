@@ -26,7 +26,6 @@ class _ScanScreenState extends State<ScanScreen> {
     _checkLostData();
   }
 
-  // Handle Android Activity Recreation
   Future<void> _checkLostData() async {
     try {
       final LostDataResponse response = await _picker.retrieveLostData();
@@ -45,7 +44,6 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
-  // Pick Image from Camera or Gallery
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? file = await _picker.pickImage(
@@ -71,9 +69,8 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
-  // Analyze Image with Backend API
   Future<void> _analyzeImage() async {
-    if (_pickedFile == null && _imageBytes == null) return;
+    if (_imageBytes == null) return;
 
     setState(() {
       _isLoading = true;
@@ -97,7 +94,6 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
-  // Download PDF Legal Notice
   Future<void> _downloadPdf(dynamic id) async {
     final url = Uri.parse(ApiService.getPdfDownloadUrl(id));
     final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -110,59 +106,86 @@ class _ScanScreenState extends State<ScanScreen> {
 
   void _showServerConfigDialog() {
     final controller = TextEditingController(text: ApiService.customUrl);
+    String? testStatus;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('⚙️ Server Endpoint URL', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Choose or enter your FastAPI Server URL:', style: TextStyle(fontSize: 12, color: Colors.grey)),
-            const SizedBox(height: 10),
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                isDense: true,
-                hintText: 'http://127.0.0.1:8000',
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('⚙️ Server Endpoint URL', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Selected FastAPI Server URL:', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                  hintText: 'http://192.168.0.214:8000',
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              children: [
-                ActionChip(
-                  label: const Text('USB (127.0.0.1:8000)'),
-                  onPressed: () => controller.text = 'http://127.0.0.1:8000',
-                ),
-                ActionChip(
-                  label: const Text('Wi-Fi (192.168.0.214:8000)'),
-                  onPressed: () => controller.text = 'http://192.168.0.214:8000',
-                ),
-                ActionChip(
-                  label: const Text('Emulator (10.0.2.2:8000)'),
-                  onPressed: () => controller.text = 'http://10.0.2.2:8000',
-                ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  ActionChip(
+                    backgroundColor: const Color(0xFFEFF6FF),
+                    label: const Text('Wi-Fi (192.168.0.214:8000)', style: TextStyle(fontSize: 11, color: Color(0xFF1D4ED8), fontWeight: FontWeight.bold)),
+                    onPressed: () {
+                      setDialogState(() {
+                        controller.text = 'http://192.168.0.214:8000';
+                        testStatus = null;
+                      });
+                    },
+                  ),
+                  ActionChip(
+                    backgroundColor: const Color(0xFFF1F5F9),
+                    label: const Text('USB (127.0.0.1:8000)', style: TextStyle(fontSize: 11)),
+                    onPressed: () {
+                      setDialogState(() {
+                        controller.text = 'http://127.0.0.1:8000';
+                        testStatus = null;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  setDialogState(() => testStatus = 'Testing connection...');
+                  final ok = await ApiService.testConnection(controller.text.trim());
+                  setDialogState(() => testStatus = ok ? '✅ Server Connected Online!' : '❌ Cannot reach server');
+                },
+                icon: const Icon(Icons.wifi_tethering, size: 16),
+                label: const Text('Test Connection', style: TextStyle(fontSize: 12)),
+              ),
+              if (testStatus != null) ...[
+                const SizedBox(height: 6),
+                Text(testStatus!, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: testStatus!.startsWith('✅') ? Colors.green : Colors.red)),
               ],
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  ApiService.customUrl = controller.text.trim();
+                });
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Server set to: ${ApiService.customUrl}')),
+                );
+              },
+              child: const Text('Save'),
             ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                ApiService.customUrl = controller.text.trim();
-              });
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Updated Server: ${ApiService.customUrl}')),
-              );
-            },
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
   }
@@ -197,7 +220,7 @@ class _ScanScreenState extends State<ScanScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_ethernet, color: Colors.white, size: 20),
+            icon: const Icon(Icons.wifi_find, color: Colors.white, size: 22),
             tooltip: 'Server Settings',
             onPressed: _showServerConfigDialog,
           ),
