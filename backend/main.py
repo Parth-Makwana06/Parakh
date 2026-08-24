@@ -51,7 +51,7 @@ async def serve_dashboard():
     return HTMLResponse("Dashboard file not found", status_code=404)
 
 @app.post("/api/scan", tags=["Scanner"], summary="Scan Product Image")
-async def scan_product(file: UploadFile = File(...)):
+def scan_product(file: UploadFile = File(...)):
     """
     Accepts an uploaded image of a packaged commodity, runs OCR to extract text,
     validates against Legal Metrology rules, saves the inspection log, and returns the result.
