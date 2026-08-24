@@ -36,7 +36,7 @@ class ApiService {
         ),
       );
 
-      final streamedResponse = await request.send().timeout(const Duration(seconds: 15));
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 60));
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
