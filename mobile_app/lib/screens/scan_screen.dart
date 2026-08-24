@@ -94,6 +94,15 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
+  void _resetScan() {
+    setState(() {
+      _imageBytes = null;
+      _pickedFile = null;
+      _result = null;
+      _errorMessage = null;
+    });
+  }
+
   Future<void> _downloadPdf(dynamic id) async {
     final url = Uri.parse(ApiService.getPdfDownloadUrl(id));
     final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -245,37 +254,38 @@ class _ScanScreenState extends State<ScanScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Capture Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt, color: Colors.white),
-                    label: const Text('Capture Photo', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: themeColor,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            // 1. Capture Buttons (Only if no image is loaded)
+            if (_imageBytes == null)
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _pickImage(ImageSource.camera),
+                      icon: const Icon(Icons.camera_alt, color: Colors.white),
+                      label: const Text('Capture Photo', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: themeColor,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library, color: themeColor),
-                    label: const Text('Gallery', style: TextStyle(color: themeColor, fontWeight: FontWeight.bold)),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: themeColor, width: 1.5),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _pickImage(ImageSource.gallery),
+                      icon: const Icon(Icons.photo_library, color: themeColor),
+                      label: const Text('Gallery', style: TextStyle(color: themeColor, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: themeColor, width: 1.5),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
+                ],
+              ),
+            if (_imageBytes == null) const SizedBox(height: 16),
 
             // 2. Image Preview Card
             if (_imageBytes != null) ...[
@@ -289,36 +299,51 @@ class _ScanScreenState extends State<ScanScreen> {
                 ),
                 child: Column(
                   children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                      child: Image.memory(
-                        _imageBytes!,
-                        height: 240,
-                        width: double.infinity,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _analyzeImage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
-                          minimumSize: const Size(double.infinity, 48),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                          child: Image.memory(
+                            _imageBytes!,
+                            height: 240,
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                          ),
                         ),
-                        child: _isLoading
-                            ? const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
-                                  SizedBox(width: 12),
-                                  Text('Running OCR & Rule Engine...', style: TextStyle(color: Colors.white)),
-                                ],
-                              )
-                            : const Text('🔍 Analyze Compliance (LMPC 2011)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
-                      ),
+                        if (_result == null)
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: IconButton(
+                              icon: const Icon(Icons.close, color: Colors.black54),
+                              onPressed: _resetScan,
+                              style: IconButton.styleFrom(backgroundColor: Colors.white70),
+                            ),
+                          ),
+                      ],
                     ),
+                    if (_result == null)
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _analyzeImage,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2563EB),
+                            minimumSize: const Size(double.infinity, 48),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: _isLoading
+                              ? const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                                    SizedBox(width: 12),
+                                    Text('Running OCR & Rule Engine...', style: TextStyle(color: Colors.white)),
+                                  ],
+                                )
+                              : const Text('🔍 Analyze Compliance (LMPC 2011)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -362,6 +387,16 @@ class _ScanScreenState extends State<ScanScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _resetScan,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Scan Another Product (Reset)', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
               const SizedBox(height: 30),
             ],
           ],

@@ -56,8 +56,8 @@ async def scan_product(file: UploadFile = File(...)):
         ocr_result = ocr_engine.extract_text_from_image(file_path)
         raw_text = ocr_result.get("raw_text", "")
 
-        # 3. Validate rules to determine Pass/Fail and violations
-        validation_result = rule_validator.validate_lmpc_rules(raw_text)
+        # 2. Rule Validation using Gemini AI
+        validation_result = rule_validator.validate_lmpc_rules(file_path)
         status = validation_result.get("status", "Fail")
         total_violations = validation_result.get("total_violations", 0)
         violations_list = validation_result.get("violations_list", [])
