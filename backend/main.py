@@ -31,6 +31,15 @@ app.add_middleware(
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+@app.get("/", tags=["Health"])
+def root():
+    return {
+        "status": "online",
+        "system": "Parakh - Legal Metrology AI Inspection Engine",
+        "team": "InsightX",
+        "endpoints": ["/api/scan", "/api/history", "/api/download-notice/{id}"]
+    }
+
 @app.post("/api/scan", tags=["Scanner"], summary="Scan Product Image")
 async def scan_product(file: UploadFile = File(...)):
     """
