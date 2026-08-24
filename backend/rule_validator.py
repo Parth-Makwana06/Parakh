@@ -4,9 +4,11 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 
-def validate_lmpc_rules(image_path: str) -> dict:
+from typing import List
+
+def validate_lmpc_rules(image_paths: List[str]) -> dict:
     """
-    Uses Gemini AI to perform OCR and LMPC 2011 rule validation on the image.
+    Uses Gemini AI to perform OCR and LMPC 2011 rule validation on the images.
     """
     import importlib
     load_dotenv(override=True)
@@ -19,8 +21,14 @@ def validate_lmpc_rules(image_path: str) -> dict:
         # Configure the NEW Gemini client
         client = genai.Client(api_key=current_api_key)
         
-        # Upload the file
-        sample_file = client.files.upload(file=image_path)
+        # Read all file bytes directly and create inline parts
+        image_parts = []
+        for path in image_paths:
+            with open(path, "rb") as f:
+                image_bytes = f.read()
+                image_parts.append(
+                    types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
+                )
         
         prompt = """
         You are a strict Legal Metrology (Packaged Commodities) Rules, 2011 inspector.
@@ -57,7 +65,7 @@ def validate_lmpc_rules(image_path: str) -> dict:
 
         response = client.models.generate_content(
             model='gemini-3.6-flash',
-            contents=[sample_file, prompt]
+            contents=[*image_parts, prompt]
         )
 
         response_text = response.text
@@ -68,12 +76,6 @@ def validate_lmpc_rules(image_path: str) -> dict:
             
         result = json.loads(response_text.strip())
         
-        # Cleanup file from Gemini servers
-        try:
-            client.files.delete(name=sample_file.name)
-        except Exception:
-            pass
-
         return result
 
     except Exception as e:
