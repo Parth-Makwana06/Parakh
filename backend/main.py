@@ -3,7 +3,7 @@ import shutil
 from typing import List, Dict, Any
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 import uvicorn
 
 # Import core modules
@@ -37,8 +37,18 @@ def root():
         "status": "online",
         "system": "Parakh - Legal Metrology AI Inspection Engine",
         "team": "InsightX",
-        "endpoints": ["/api/scan", "/api/history", "/api/download-notice/{id}"]
+        "endpoints": ["/api/scan", "/api/history", "/api/download-notice/{id}", "/dashboard"]
     }
+
+@app.get("/dashboard", tags=["Web Dashboard"], summary="View Live Dashboard")
+async def serve_dashboard():
+    """
+    Serves the beautiful Parakh HTML dashboard.
+    """
+    html_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "parakh.html")
+    if os.path.exists(html_path):
+        return FileResponse(html_path)
+    return HTMLResponse("Dashboard file not found", status_code=404)
 
 @app.post("/api/scan", tags=["Scanner"], summary="Scan Product Image")
 async def scan_product(file: UploadFile = File(...)):
