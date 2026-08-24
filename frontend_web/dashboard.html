@@ -1348,10 +1348,24 @@
     if (highlight) toast({ tone: rec.status === "PASS" ? "success" : "danger", title: "New inspection", msg: `${rec.id} · ${rec.product} — ${rec.status}` });
   }
 
+  async function pollRealAPI() {
+    if (!state.live) return;
+    const oldLen = state.inspections ? state.inspections.length : 0;
+    await loadData();
+    const newLen = state.inspections ? state.inspections.length : 0;
+    
+    if (newLen > oldLen) {
+      renderTable({ animate: true });
+      renderKPIs();
+      toast({ tone: "success", title: "New scan detected!", msg: "Latest inspection received from mobile app." });
+    }
+    
+    state.liveTimer = setTimeout(pollRealAPI, 3000);
+  }
+
   function scheduleLive() {
     if (!state.live) return;
-    const delay = 5000 + Math.random() * 3000; // 5â€“8s
-    state.liveTimer = setTimeout(() => { addLiveInspection(true); scheduleLive(); }, delay);
+    state.liveTimer = setTimeout(pollRealAPI, 3000);
   }
 
   function setLive(on) {
@@ -1377,16 +1391,17 @@
   function hideFeedError() { $("#feedError").classList.remove("show"); applyFilters(); }
 
   /* ---------------------------------------------------------------- refresh */
-  function refreshFeed() {
+  async function refreshFeed() {
     const btn = $("#refreshBtn");
     const ic = btn.querySelector("svg") || btn.querySelector("i");
     if (ic && !RM) { ic.style.transition = "transform 0.7s ease"; ic.style.transform = "rotate(360deg)"; setTimeout(() => (ic.style.transform = ""), 720); }
-    const n = 1 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < n; i++) addLiveInspection(false);
+    
+    // Fetch real data from FastAPI
+    await loadData();
     state.visible = INITIAL_VISIBLE;
-    applyFilters();
     renderTable({ animate: true });
-    toast({ tone: "success", title: "Feed refreshed", msg: `${n} new inspection${n > 1 ? "s" : ""} received.` });
+    renderKPIs();
+    toast({ tone: "success", title: "Feed refreshed", msg: "Latest inspections fetched from server." });
   }
 
   /* ---------------------------------------------------------------- events */
