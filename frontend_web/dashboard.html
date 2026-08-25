@@ -13,7 +13,11 @@
 
   <!-- Tailwind (layout utilities) + Chart.js + Lucide icons, all via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
+    <script>
+    if (sessionStorage.getItem("parakh_admin") !== "true") {
+      window.location.href = "login.html";
+    }
+
     tailwind.config = { theme: { extend: { fontFamily: { sans: ["Inter", "sans-serif"] } } } };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -57,6 +61,7 @@
 </head>
 
 <body>
+
   <!-- SVG defs: emblem + gradients -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
@@ -413,8 +418,8 @@
         <div class="eyebrow" style="margin-bottom:0.8rem" id="lblAuth">Admin Authentication</div>
         <div id="authStatus" style="font-size:0.9rem; margin-bottom: 0.8rem; font-weight: 600; color: var(--danger)">Status: Not logged in</div>
         <div class="flex gap-2">
-           <button class="clay-btn clay-btn--sm" style="background:var(--teal); color:white" id="btnLogin">Admin Login</button>
-           <button class="clay-btn clay-btn--sm" style="background:var(--danger); color:white; display:none" id="btnLogout">Logout</button>
+           
+           <button class="clay-btn clay-btn--sm" style="background:var(--danger); color:white;" id="btnLogout">Logout</button>
         </div>
 
       </div>
@@ -868,6 +873,7 @@
     hideLoader();
     startEntrance();
     wireEvents();
+    attachAuthEvents();
     seedActivity();
   }
 
@@ -912,122 +918,140 @@
 
 
   /* ---------------------------------------------------------------- Settings & Auth */
+  
+  /* ---------------------------------------------------------------- Auth & Translations */
   const I18N = {
     en: {
-      settings: "System Settings",
-      lang: "Language Preferences",
-      auth: "Admin Authentication",
-      overview: "Overview",
-      analytics: "Analytics",
-      feed: "Feed",
-      intel: "Intel",
-      total_insp: "Total Inspections",
-      compliant_pkgs: "Compliant Packages",
-      violations: "Violations Flagged",
-      nat_comp: "National Compliance",
-      recent_scans: "Recent Scans",
-      violation_intel: "Violation Intelligence",
-      login: "Admin Login",
-      logout: "Logout",
-      status_in: "Status: Logged In (Admin)",
-      status_out: "Status: Not logged in"
+      settings: "System Settings", lang: "Language Preferences", auth: "Admin Authentication",
+      overview: "Overview", analytics: "Analytics", feed: "Live Feed", intel: "Intel / Reports",
+      total_insp: "Total Inspections", compliant_pkgs: "Compliant Packages", violations: "Violations Flagged", nat_comp: "National Compliance",
+      recent_scans: "Recent Scans", violation_intel: "Violation Intelligence",
+      sys_act: "System Activity",
+      col_id: "Inspection ID", col_status: "Status", col_prod: "Product", col_qty: "Net Qty", col_mrp: "MRP", col_loc: "Location", col_time: "Inspected",
+      btn_login: "Admin Login", btn_logout: "Logout", status_in: "Status: Logged In (Admin)", status_out: "Status: Not logged in",
+      login_title: "PARAKH ADMIN", login_sub: "Authorized Personnel Only", btn_overlay: "Login to Dashboard",
+      search: "Search records...", filter_all: "All", filter_pass: "Pass", filter_fail: "Fail", btn_load: "Load More"
     },
     hi: {
-      settings: "सिस्टम सेटिंग्स",
-      lang: "भाषा प्राथमिकताएं",
-      auth: "व्यवस्थापक प्रमाणीकरण (Admin Auth)",
-      overview: "अवलोकन",
-      analytics: "विश्लेषण",
-      feed: "लाइव फ़ीड",
-      intel: "रिपोर्ट",
-      total_insp: "कुल निरीक्षण",
-      compliant_pkgs: "अनुपालन पैकेज (Compliant)",
-      violations: "उल्लंघन दर्ज (Violations)",
-      nat_comp: "राष्ट्रीय अनुपालन (Compliance)",
-      recent_scans: "हाल के स्कैन",
-      violation_intel: "उल्लंघन जानकारी",
-      login: "लॉग इन करें",
-      logout: "लॉग आउट",
-      status_in: "स्थिति: लॉग इन (व्यवस्थापक)",
-      status_out: "स्थिति: लॉग इन नहीं है"
+      settings: "सिस्टम सेटिंग्स", lang: "भाषा प्राथमिकताएं", auth: "व्यवस्थापक प्रमाणीकरण",
+      overview: "अवलोकन", analytics: "विश्लेषण", feed: "लाइव फ़ीड", intel: "रिपोर्ट",
+      total_insp: "कुल निरीक्षण", compliant_pkgs: "अनुपालन पैकेज", violations: "उल्लंघन दर्ज", nat_comp: "राष्ट्रीय अनुपालन",
+      recent_scans: "हाल के स्कैन", violation_intel: "उल्लंघन जानकारी",
+      sys_act: "सिस्टम गतिविधि (Event Log)",
+      col_id: "निरीक्षण आईडी", col_status: "स्थिति", col_prod: "उत्पाद", col_qty: "मात्रा", col_mrp: "एमआरपी", col_loc: "स्थान", col_time: "समय",
+      btn_login: "लॉग इन करें", btn_logout: "लॉग आउट", status_in: "स्थिति: लॉग इन (व्यवस्थापक)", status_out: "स्थिति: लॉग इन नहीं है",
+      login_title: "परख एडमिन (PARAKH)", login_sub: "केवल अधिकृत कर्मचारी", btn_overlay: "डैशबोर्ड में प्रवेश करें",
+      search: "रिकॉर्ड खोजें...", filter_all: "सभी", filter_pass: "पास", filter_fail: "फेल", btn_load: "और देखें"
     }
   };
 
-  let currentLang = 'en';
-  let isAdmin = false;
+  let currentLang = localStorage.getItem("parakh_lang") || 'en';
+  let isAdmin = sessionStorage.getItem("parakh_admin") === "true";
 
-  function updateSettingsUI() {
-    // Auth UI
-    document.getElementById("authStatus").textContent = isAdmin ? I18N[currentLang].status_in : I18N[currentLang].status_out;
-    document.getElementById("authStatus").style.color = isAdmin ? "var(--success)" : "var(--danger)";
-    document.getElementById("btnLogin").style.display = isAdmin ? "none" : "block";
-    document.getElementById("btnLogout").style.display = isAdmin ? "block" : "none";
-
-    // Language UI
-    document.getElementById("settingsTitle").textContent = I18N[currentLang].settings;
-    document.getElementById("lblLang").textContent = I18N[currentLang].lang;
-    document.getElementById("lblAuth").textContent = I18N[currentLang].auth;
-    document.getElementById("btnLogin").textContent = I18N[currentLang].login;
-    document.getElementById("btnLogout").textContent = I18N[currentLang].logout;
+  function translatePage() {
+    const dict = I18N[currentLang];
     
-    // Navigation & Headings
+    // Auth Modal & Login Overlay
+    if(document.getElementById("authStatus")) document.getElementById("authStatus").textContent = isAdmin ? dict.status_in : dict.status_out;
+    if(document.getElementById("btnLogin")) document.getElementById("btnLogin").textContent = dict.btn_login;
+    if(document.getElementById("btnLogout")) document.getElementById("btnLogout").textContent = dict.btn_logout;
+    if(document.getElementById("settingsTitle")) document.getElementById("settingsTitle").textContent = dict.settings;
+    if(document.getElementById("lblLang")) document.getElementById("lblLang").textContent = dict.lang;
+    if(document.getElementById("lblAuth")) document.getElementById("lblAuth").textContent = dict.auth;
+    
+    if(document.getElementById("txtLoginTitle")) document.getElementById("txtLoginTitle").textContent = dict.login_title;
+    if(document.getElementById("txtLoginSub")) document.getElementById("txtLoginSub").textContent = dict.login_sub;
+    if(document.getElementById("btnOverlayLogin")) document.getElementById("btnOverlayLogin").textContent = dict.btn_overlay;
+    if(document.getElementById("searchInput")) document.getElementById("searchInput").placeholder = dict.search;
+    if(document.getElementById("loadMoreBtn")) document.getElementById("loadMoreBtn").textContent = dict.btn_load;
+
+    // Navigation
     const navs = document.querySelectorAll(".nav-link");
     if(navs.length >= 4) {
-       navs[0].textContent = I18N[currentLang].overview;
-       navs[1].textContent = I18N[currentLang].analytics;
-       navs[2].textContent = I18N[currentLang].feed;
-       navs[3].textContent = I18N[currentLang].intel;
+       navs[0].textContent = dict.overview; navs[1].textContent = dict.analytics;
+       navs[2].textContent = dict.feed; navs[3].textContent = dict.intel;
     }
 
-    const eyebrowElements = document.querySelectorAll(".eyebrow");
-    eyebrowElements.forEach(el => {
-      if(el.textContent.includes("Total Inspections") || el.textContent.includes("कुल निरीक्षण")) el.textContent = I18N[currentLang].total_insp;
-      if(el.textContent.includes("Compliant Packages") || el.textContent.includes("अनुपालन पैकेज")) el.textContent = I18N[currentLang].compliant_pkgs;
-      if(el.textContent.includes("Violations Flagged") || el.textContent.includes("उल्लंघन दर्ज")) el.textContent = I18N[currentLang].violations;
-      if(el.textContent.includes("National Compliance") || el.textContent.includes("राष्ट्रीय अनुपालन")) el.textContent = I18N[currentLang].nat_comp;
+    // Replace all static text nodes by looking at their content
+    document.querySelectorAll(".eyebrow, .section-title, th, button[data-status]").forEach(el => {
+      if(!el.childNodes || el.childNodes.length === 0) return;
+      // For elements with children (like buttons with spans), we only want to translate the text node
+      el.childNodes.forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            let t = node.textContent.trim().toLowerCase();
+            if(t.includes("total inspections") || t.includes("कुल निरीक्षण")) node.textContent = dict.total_insp;
+            if(t.includes("compliant packages") || t.includes("अनुपालन पैकेज")) node.textContent = dict.compliant_pkgs;
+            if(t.includes("violations flagged") || t.includes("उल्लंघन दर्ज")) node.textContent = dict.violations;
+            if(t.includes("national compliance") || t.includes("राष्ट्रीय अनुपालन")) node.textContent = dict.nat_comp;
+            if(t.includes("recent scans") || t.includes("हाल के स्कैन")) node.textContent = dict.recent_scans;
+            if(t.includes("violation intelligence") || t.includes("उल्लंघन जानकारी")) node.textContent = dict.violation_intel;
+            if(t.includes("system activity") || t.includes("सिस्टम गतिविधि")) node.textContent = dict.sys_act;
+            if(t === "inspection id" || t === "id" || t === "निरीक्षण आईडी") node.textContent = dict.col_id;
+            if(t === "status" || t === "स्थिति") node.textContent = dict.col_status;
+            if(t === "product" || t === "उत्पाद") node.textContent = dict.col_prod;
+            if(t === "net qty" || t === "net quantity" || t === "मात्रा") node.textContent = dict.col_qty;
+            if(t === "mrp" || t === "एमआरपी") node.textContent = dict.col_mrp;
+            if(t === "location" || t === "स्थान") node.textContent = dict.col_loc;
+            if(t === "inspected" || t === "time" || t === "समय") node.textContent = dict.col_time;
+            if(t === "all" || t === "सभी") node.textContent = dict.filter_all;
+            if(t === "pass" || t === "पास") node.textContent = dict.filter_pass;
+            if(t === "fail" || t === "फेल") node.textContent = dict.filter_fail;
+        }
+      });
     });
 
-    const sectionElements = document.querySelectorAll(".section-title");
-    sectionElements.forEach(el => {
-      if(el.textContent.includes("Recent Scans") || el.textContent.includes("हाल के स्कैन")) el.textContent = I18N[currentLang].recent_scans;
-      if(el.textContent.includes("Violation Intelligence") || el.textContent.includes("उल्लंघन जानकारी")) el.textContent = I18N[currentLang].violation_intel;
-    });
+    // Check radio buttons
+    const langRadios = document.querySelectorAll("input[name='lang']");
+    langRadios.forEach(r => { if(r.value === currentLang) r.checked = true; });
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const btnSet = document.getElementById("btnSettings");
-    if (btnSet) {
-      btnSet.addEventListener("click", () => {
-        document.getElementById("settingsBackdrop").classList.add("show");
-        icons();
-      });
+  function handleLogin() {
+    const user = document.getElementById("adminUser").value;
+    const pass = document.getElementById("adminPass").value;
+    if(user === "admin" && pass === "admin123") {
+       isAdmin = true;
+       sessionStorage.setItem("parakh_admin", "true");
+       document.getElementById("loginOverlay").style.display = "none";
+       document.getElementById("loginError").style.display = "none";
+       translatePage();
+       toast({ tone: "success", title: "Authenticated", msg: "Admin access granted." });
+    } else {
+       document.getElementById("loginError").style.display = "block";
     }
+  }
 
-    const btnClose = document.getElementById("settingsClose");
-    if (btnClose) {
-      btnClose.addEventListener("click", () => document.getElementById("settingsBackdrop").classList.remove("show"));
-    }
+  function handleLogout() {
+    isAdmin = false;
+    sessionStorage.removeItem("parakh_admin");
+    document.getElementById("loginOverlay").style.display = "flex";
+    document.getElementById("settingsBackdrop").classList.remove("show");
+    translatePage();
+  }
 
-    const langRadios = document.querySelectorAll("input[name='lang']");
-    langRadios.forEach(r => r.addEventListener("change", (e) => {
+  function attachAuthEvents() {
+    if(!isAdmin) document.getElementById("loginOverlay").style.display = "flex";
+    else document.getElementById("loginOverlay").style.display = "none";
+
+    document.getElementById("btnOverlayLogin")?.addEventListener("click", handleLogin);
+    document.getElementById("btnLogout")?.addEventListener("click", handleLogout);
+    document.getElementById("btnLogin")?.addEventListener("click", () => {
+       document.getElementById("settingsBackdrop").classList.remove("show");
+       document.getElementById("loginOverlay").style.display = "flex";
+    });
+
+    document.querySelectorAll("input[name='lang']").forEach(r => r.addEventListener("change", (e) => {
        currentLang = e.target.value;
-       updateSettingsUI();
+       localStorage.setItem("parakh_lang", currentLang);
+       translatePage();
        toast({ tone: "info", title: "Language Changed", msg: currentLang === 'hi' ? "हिंदी भाषा लागू की गई" : "English language applied" });
+       
+       // Re-render table and violations to translate dynamic content
+       renderTable({animate: false});
+       renderViolations();
     }));
 
-    document.getElementById("btnLogin")?.addEventListener("click", () => {
-       isAdmin = true;
-       updateSettingsUI();
-       toast({ tone: "success", title: "Authenticated", msg: "Admin access granted." });
-       setTimeout(() => document.getElementById("settingsBackdrop").classList.remove("show"), 1000);
-    });
-
-    document.getElementById("btnLogout")?.addEventListener("click", () => {
-       isAdmin = false;
-       updateSettingsUI();
-       toast({ tone: "info", title: "Logged Out", msg: "Admin session closed." });
-    });
-  });
+    translatePage();
+  }
 
   /* ---------------------------------------------------------------- loader */
   function runLoader() {
@@ -1485,7 +1509,8 @@
         .print{margin-top:24px}.print button{background:#0d7a54;color:#fff;border:0;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:14px}
         @media print{.print{display:none}}
       </style></head><body>
-      <div class="hd"><div><h1>MetrologyLens AI — Inspection Report</h1><div class="sub">Department of Consumer Affairs • Legal Metrology • Prototype</div></div>
+
+  <div class="hd"><div><h1>MetrologyLens AI — Inspection Report</h1><div class="sub">Department of Consumer Affairs • Legal Metrology • Prototype</div></div>
         <span class="badge ${r.status === "PASS" ? "p" : "f"}">${r.status}</span></div>
       <h2>Summary</h2>
       <div class="grid">
