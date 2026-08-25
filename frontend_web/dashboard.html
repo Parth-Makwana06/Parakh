@@ -941,17 +941,18 @@
   
   let isAdmin = true;
 
-  function triggerGoogleTranslate(lang) {
-    const combo = document.querySelector('.goog-te-combo');
-    if (combo) {
-      combo.value = lang;
-      combo.dispatchEvent(new Event('change'));
-    } else {
-      // If widget isn't loaded yet, set cookie and reload
-      document.cookie = `googtrans=/en/${lang}; path=/;`;
-      document.cookie = `googtrans=/en/${lang}; domain=.${location.hostname}; path=/;`;
-      window.location.reload();
-    }
+    function triggerGoogleTranslate(lang) {
+    let attempts = 0;
+    const interval = setInterval(() => {
+      const combo = document.querySelector('.goog-te-combo');
+      if (combo) {
+        combo.value = lang;
+        combo.dispatchEvent(new Event('change'));
+        clearInterval(interval);
+      }
+      attempts++;
+      if (attempts > 20) clearInterval(interval); // Give up after 10 seconds
+    }, 500);
   }
 
   function handleLogout() {
