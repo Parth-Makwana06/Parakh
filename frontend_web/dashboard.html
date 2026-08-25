@@ -860,7 +860,7 @@
     let sortedV = Object.entries(violCounts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e => ({type: e[0], count: e[1]}));
     if (sortedV.length > 0) {
         baseStats.violationBreakdown = sortedV;
-    } else if (total > 0) {
+    } else {
         baseStats.violationBreakdown = [{type: "No violations detected", count: 0}];
     }
     
@@ -1164,13 +1164,12 @@
 
   /* ---------------------------------------------------------------- activity */
   function seedActivity() {
-    const src = state.inspections.slice(0, 5);
+    const src = state.inspections.slice(0, 10);
     state.activity = [];
     src.forEach((r) => {
       if (r.status === "FAIL") pushActivity({ tone: "bad", text: `Violation flagged on ${r.id}`, sub: `${r.violations[0] || "Compliance issue"} · ${r.location}`, ts: r.timestamp }, true);
       else pushActivity({ tone: "ok", text: `Inspection ${r.id} completed`, sub: `${r.product} · ${r.location}`, ts: r.timestamp }, true);
     });
-    pushActivity({ tone: "info", text: "Compliance report generated", sub: "National summary · today", ts: Date.now() - 9 * 60000 }, true);
     state.activity.sort((a, b) => b.ts - a.ts);
     renderActivity();
   }
@@ -1387,6 +1386,9 @@
     if (newLen > oldLen) {
       renderTable({ animate: true });
       renderKPIs();
+      renderViolations();
+      seedActivity();
+      renderCharts();
       toast({ tone: "success", title: "New scan detected!", msg: "Latest inspection received from mobile app." });
     }
     
@@ -1431,6 +1433,9 @@
     state.visible = INITIAL_VISIBLE;
     renderTable({ animate: true });
     renderKPIs();
+    renderViolations();
+    seedActivity();
+    renderCharts();
     toast({ tone: "success", title: "Feed refreshed", msg: "Latest inspections fetched from server." });
   }
 
