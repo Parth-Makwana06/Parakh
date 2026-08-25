@@ -57,10 +57,27 @@
 .loader{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#f3f6f8;transition:opacity .45s ease,visibility .45s}.loader.done{opacity:0;visibility:hidden;pointer-events:none}.loader-box{width:min(440px,90%);text-align:center}.loader-emblem{width:70px;height:70px;margin:0 auto 1.2rem}.loader-term{text-align:left;font-family:"JetBrains Mono",monospace;font-size:.78rem;margin:1.3rem 0}.loader-term div{color:var(--ink-3);opacity:0}.loader-term div.on{color:var(--teal);opacity:1;animation:fadeIn .25s ease}.loader-bar{height:5px;border-radius:999px;background:#dfe9ed;overflow:hidden}.loader-bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--navy),var(--teal));transition:width .3s ease}.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s var(--ease-clay)}.reveal.in{opacity:1;transform:none}@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @media(max-width:767.98px){.nav-links,.nav-desktop{display:none}.mobile-menu-btn{display:inline-flex}.mobile-menu.open{display:block;animation:fadeIn .25s ease}.detail-grid{grid-template-columns:1fr}.toast-wrap{top:auto;bottom:1rem}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}.bg-grid{animation:none}}
+
+    .error { color: var(--danger); font-size: 0.85rem; margin-top: 1rem; font-weight: 600; display: none; }
+    
+    /* Hide Google Translate UI */
+    body { top: 0 !important; position: static !important; }
+    .skiptranslate { display: none !important; }
+    .goog-te-banner-frame { display: none !important; }
   </style>
+
 </head>
 
 <body>
+
+  <div id="google_translate_element" style="display:none;"></div>
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'en,hi', autoDisplay: false}, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
 
   <!-- SVG defs: emblem + gradients -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -921,79 +938,20 @@
   
   /* ---------------------------------------------------------------- Auth & Translations */
 
-  const I18N = {
-    en: {
-      settings: "System Settings", lang: "Language Preferences", auth: "Admin Authentication",
-      overview: "Overview", analytics: "Analytics", feed: "Live Feed", intel: "Intel / Reports",
-      total_insp: "Total Inspections", compliant_pkgs: "Compliant Packages", violations: "Violations Flagged", nat_comp: "National Compliance",
-      recent_scans: "Recent Scans", violation_intel: "Violation Intelligence",
-      sys_act: "System Activity",
-      col_id: "Inspection ID", col_status: "Status", col_prod: "Product", col_qty: "Net Qty", col_mrp: "MRP", col_loc: "Location", col_time: "Inspected",
-      btn_login: "Admin Login", btn_logout: "Logout", status_in: "Status: Logged In (Admin)", status_out: "Status: Not logged in",
-      login_title: "PARAKH ADMIN", login_sub: "Authorized Personnel Only", btn_overlay: "Login to Dashboard",
-      search: "Search records...", filter_all: "All", filter_pass: "Pass", filter_fail: "Fail", btn_load: "Load More"
-    },
-    hi: {
-      settings: "सिस्टम सेटिंग्स", lang: "भाषा प्राथमिकताएं", auth: "व्यवस्थापक प्रमाणीकरण",
-      overview: "अवलोकन", analytics: "विश्लेषण", feed: "लाइव फ़ीड", intel: "रिपोर्ट",
-      total_insp: "कुल निरीक्षण", compliant_pkgs: "अनुपालन पैकेज", violations: "उल्लंघन दर्ज", nat_comp: "राष्ट्रीय अनुपालन",
-      recent_scans: "हाल के स्कैन", violation_intel: "उल्लंघन जानकारी",
-      sys_act: "सिस्टम गतिविधि (Event Log)",
-      col_id: "निरीक्षण आईडी", col_status: "स्थिति", col_prod: "उत्पाद", col_qty: "मात्रा", col_mrp: "एमआरपी", col_loc: "स्थान", col_time: "समय",
-      btn_login: "लॉग इन करें", btn_logout: "लॉग आउट", status_in: "स्थिति: लॉग इन (व्यवस्थापक)", status_out: "स्थिति: लॉग इन नहीं है",
-      login_title: "परख एडमिन (PARAKH)", login_sub: "केवल अधिकृत कर्मचारी", btn_overlay: "डैशबोर्ड में प्रवेश करें",
-      search: "रिकॉर्ड खोजें...", filter_all: "सभी", filter_pass: "पास", filter_fail: "फेल", btn_load: "और देखें"
-    }
-  };
-
-  let currentLang = localStorage.getItem("parakh_lang") || 'en';
+  
   let isAdmin = true;
 
-  function translatePage() {
-    const dict = I18N[currentLang];
-    
-    if(document.getElementById("authStatus")) document.getElementById("authStatus").textContent = dict.status_in;
-    if(document.getElementById("btnLogout")) document.getElementById("btnLogout").textContent = dict.btn_logout;
-    if(document.getElementById("settingsTitle")) document.getElementById("settingsTitle").textContent = dict.settings;
-    if(document.getElementById("lblLang")) document.getElementById("lblLang").textContent = dict.lang;
-    if(document.getElementById("lblAuth")) document.getElementById("lblAuth").textContent = dict.auth;
-    if(document.getElementById("searchInput")) document.getElementById("searchInput").placeholder = dict.search;
-    if(document.getElementById("loadMoreBtn")) document.getElementById("loadMoreBtn").textContent = dict.btn_load;
-
-    const navs = document.querySelectorAll(".nav-link");
-    if(navs.length >= 4) {
-       navs[0].textContent = dict.overview; navs[1].textContent = dict.analytics;
-       navs[2].textContent = dict.feed; navs[3].textContent = dict.intel;
+  function triggerGoogleTranslate(lang) {
+    const combo = document.querySelector('.goog-te-combo');
+    if (combo) {
+      combo.value = lang;
+      combo.dispatchEvent(new Event('change'));
+    } else {
+      // If widget isn't loaded yet, set cookie and reload
+      document.cookie = `googtrans=/en/${lang}; path=/;`;
+      document.cookie = `googtrans=/en/${lang}; domain=.${location.hostname}; path=/;`;
+      window.location.reload();
     }
-
-    document.querySelectorAll(".eyebrow, .section-title, th, button[data-status]").forEach(el => {
-      if(!el.childNodes || el.childNodes.length === 0) return;
-      el.childNodes.forEach(node => {
-        if (node.nodeType === Node.TEXT_NODE) {
-            let t = node.textContent.trim().toLowerCase();
-            if(t.includes("total inspections") || t.includes("कुल निरीक्षण")) node.textContent = dict.total_insp;
-            if(t.includes("compliant packages") || t.includes("अनुपालन पैकेज")) node.textContent = dict.compliant_pkgs;
-            if(t.includes("violations flagged") || t.includes("उल्लंघन दर्ज")) node.textContent = dict.violations;
-            if(t.includes("national compliance") || t.includes("राष्ट्रीय अनुपालन")) node.textContent = dict.nat_comp;
-            if(t.includes("recent scans") || t.includes("हाल के स्कैन")) node.textContent = dict.recent_scans;
-            if(t.includes("violation intelligence") || t.includes("उल्लंघन जानकारी")) node.textContent = dict.violation_intel;
-            if(t.includes("system activity") || t.includes("सिस्टम गतिविधि")) node.textContent = dict.sys_act;
-            if(t === "inspection id" || t === "id" || t === "निरीक्षण आईडी") node.textContent = dict.col_id;
-            if(t === "status" || t === "स्थिति") node.textContent = dict.col_status;
-            if(t === "product" || t === "उत्पाद") node.textContent = dict.col_prod;
-            if(t === "net qty" || t === "net quantity" || t === "मात्रा") node.textContent = dict.col_qty;
-            if(t === "mrp" || t === "एमआरपी") node.textContent = dict.col_mrp;
-            if(t === "location" || t === "स्थान") node.textContent = dict.col_loc;
-            if(t === "inspected" || t === "time" || t === "समय") node.textContent = dict.col_time;
-            if(t === "all" || t === "सभी") node.textContent = dict.filter_all;
-            if(t === "pass" || t === "पास") node.textContent = dict.filter_pass;
-            if(t === "fail" || t === "फेल") node.textContent = dict.filter_fail;
-        }
-      });
-    });
-
-    const langRadios = document.querySelectorAll("input[name='lang']");
-    langRadios.forEach(r => { if(r.value === currentLang) r.checked = true; });
   }
 
   function handleLogout() {
@@ -1017,18 +975,33 @@
 
     document.getElementById("btnLogout")?.addEventListener("click", handleLogout);
 
-    document.querySelectorAll("input[name='lang']").forEach(r => r.addEventListener("change", (e) => {
-       currentLang = e.target.value;
-       localStorage.setItem("parakh_lang", currentLang);
-       translatePage();
-       toast({ tone: "info", title: "Language Changed", msg: currentLang === 'hi' ? "हिंदी भाषा लागू की गई" : "English language applied" });
-       
-       renderTable({animate: false});
-       renderViolations();
-    }));
+    const savedLang = localStorage.getItem("parakh_lang") || 'en';
+    
+    // Set radio buttons correctly
+    document.querySelectorAll("input[name='lang']").forEach(r => {
+      if (r.value === savedLang) r.checked = true;
+      
+      r.addEventListener("change", (e) => {
+         const newLang = e.target.value;
+         localStorage.setItem("parakh_lang", newLang);
+         
+         // Clear Google cookies if switching back to EN
+         if (newLang === 'en') {
+             document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+             document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=.${location.hostname}; path=/;`;
+             window.location.reload();
+         } else {
+             triggerGoogleTranslate('hi');
+         }
+      });
+    });
 
-    translatePage();
+    // Auto-trigger if Hindi was saved
+    if (savedLang === 'hi') {
+        setTimeout(() => triggerGoogleTranslate('hi'), 500);
+    }
   }
+
 
 /* ---------------------------------------------------------------- loader */
   function runLoader() {
@@ -1496,7 +1469,24 @@
             body { margin: 0; padding: 20px; }
             .grid div { break-inside: avoid; }
         }
-      </style></head><body>
+    
+    .error { color: var(--danger); font-size: 0.85rem; margin-top: 1rem; font-weight: 600; display: none; }
+    
+    /* Hide Google Translate UI */
+    body { top: 0 !important; position: static !important; }
+    .skiptranslate { display: none !important; }
+    .goog-te-banner-frame { display: none !important; }
+  </style>
+</head><body>
+
+  <div id="google_translate_element" style="display:none;"></div>
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'en,hi', autoDisplay: false}, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
 
       <div class="hd">
         <div>
