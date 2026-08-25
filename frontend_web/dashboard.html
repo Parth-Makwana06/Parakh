@@ -767,7 +767,7 @@
       category: "General",
       quantity: fields.Net_Quantity || "-",
       mrp: mrp,
-      location: assignedState,
+      location: fields.Location || assignedState,
       status: row.status.toUpperCase() === "PASS" ? "PASS" : "FAIL",
       timestamp: ts,
       manufacturer: { name: fields.Manufacturer || "Unknown", address: "" },

@@ -27,6 +27,9 @@ class ApiService {
     try {
       final uri = Uri.parse('$targetUrl/api/scan');
       final request = http.MultipartRequest('POST', uri);
+      
+      // Inspector Location
+      request.fields['location'] = 'Surat, Gujarat';
 
       for (var file in files) {
         request.files.add(

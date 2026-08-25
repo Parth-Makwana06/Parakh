@@ -1,7 +1,7 @@
 import os
 import shutil
 from typing import List, Dict, Any
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -56,7 +56,7 @@ async def serve_dashboard():
 from typing import List
 
 @app.post("/api/scan", tags=["Scanner"], summary="Scan Product Image")
-def scan_product(file: UploadFile = File(None), files: List[UploadFile] = File(None)):
+def scan_product(location: str = Form("Unknown"), file: UploadFile = File(None), files: List[UploadFile] = File(None)):
     """
     Accepts an uploaded image (or multiple images) of a packaged commodity, runs OCR to extract text,
     validates against Legal Metrology rules, saves the inspection log, and returns the result.
@@ -90,6 +90,9 @@ def scan_product(file: UploadFile = File(None), files: List[UploadFile] = File(N
         total_violations = validation_result.get("total_violations", 0)
         violations_list = validation_result.get("violations_list", [])
         extracted_fields = validation_result.get("extracted_fields", {})
+        
+        # Inject the inspector location from the mobile app
+        extracted_fields["Location"] = location
 
         # 4. Save the inspection log into SQLite
         inspection_id = database.save_inspection(
