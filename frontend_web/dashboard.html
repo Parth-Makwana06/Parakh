@@ -136,6 +136,7 @@
         <div class="nav-desktop items-center gap-2.5 hidden md:flex">
           <span class="term-chip">Team InsightX</span>
           <span class="term-chip" id="navStatus"><span class="dot dot-pulse"></span> System Online</span>
+          <button class="clay-icon" id="btnSettings" aria-label="Settings" style="margin-left:8px; width:32px; height:32px"><i data-lucide="settings"></i></button>
           <label class="switch" title="Toggle live inspection simulation">
             <input type="checkbox" id="liveToggle" />
             <span class="track"><span class="thumb"></span></span>
@@ -383,6 +384,42 @@
       </p>
     </footer>
   </main>
+
+
+  <!-- ============================ SETTINGS MODAL ============================ -->
+  <div class="modal-backdrop" id="settingsBackdrop" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="clay neon-edge modal" id="settingsModal" style="width:min(400px, 100%)">
+      <div class="flex items-center justify-between gap-3 p-5" style="border-bottom:1px solid var(--hair)">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="kpi-icon accent-teal" style="--acc:var(--teal);--acc-rgb:34,211,238"><i data-lucide="settings"></i></span>
+          <div class="min-w-0">
+            <div class="section-title" id="settingsTitle" style="font-size:1.1rem">System Settings</div>
+          </div>
+        </div>
+        <button class="clay-icon" id="settingsClose" aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body p-5">
+        
+        <div class="eyebrow" style="margin-bottom:0.8rem" id="lblLang">Language Preferences</div>
+        <div class="flex gap-4" style="margin-bottom:2rem">
+          <label style="display:flex;align-items:center;gap:0.5rem;font-weight:600;cursor:pointer">
+            <input type="radio" name="lang" value="en" checked> English
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;font-weight:600;cursor:pointer">
+            <input type="radio" name="lang" value="hi"> हिन्दी
+          </label>
+        </div>
+
+        <div class="eyebrow" style="margin-bottom:0.8rem" id="lblAuth">Admin Authentication</div>
+        <div id="authStatus" style="font-size:0.9rem; margin-bottom: 0.8rem; font-weight: 600; color: var(--danger)">Status: Not logged in</div>
+        <div class="flex gap-2">
+           <button class="clay-btn clay-btn--sm" style="background:var(--teal); color:white" id="btnLogin">Admin Login</button>
+           <button class="clay-btn clay-btn--sm" style="background:var(--danger); color:white; display:none" id="btnLogout">Logout</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <!-- ============================ INSPECTION MODAL ============================ -->
   <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -872,6 +909,125 @@
     
     state.stats = baseStats;
   }
+
+
+  /* ---------------------------------------------------------------- Settings & Auth */
+  const I18N = {
+    en: {
+      settings: "System Settings",
+      lang: "Language Preferences",
+      auth: "Admin Authentication",
+      overview: "Overview",
+      analytics: "Analytics",
+      feed: "Feed",
+      intel: "Intel",
+      total_insp: "Total Inspections",
+      compliant_pkgs: "Compliant Packages",
+      violations: "Violations Flagged",
+      nat_comp: "National Compliance",
+      recent_scans: "Recent Scans",
+      violation_intel: "Violation Intelligence",
+      login: "Admin Login",
+      logout: "Logout",
+      status_in: "Status: Logged In (Admin)",
+      status_out: "Status: Not logged in"
+    },
+    hi: {
+      settings: "सिस्टम सेटिंग्स",
+      lang: "भाषा प्राथमिकताएं",
+      auth: "व्यवस्थापक प्रमाणीकरण (Admin Auth)",
+      overview: "अवलोकन",
+      analytics: "विश्लेषण",
+      feed: "लाइव फ़ीड",
+      intel: "रिपोर्ट",
+      total_insp: "कुल निरीक्षण",
+      compliant_pkgs: "अनुपालन पैकेज (Compliant)",
+      violations: "उल्लंघन दर्ज (Violations)",
+      nat_comp: "राष्ट्रीय अनुपालन (Compliance)",
+      recent_scans: "हाल के स्कैन",
+      violation_intel: "उल्लंघन जानकारी",
+      login: "लॉग इन करें",
+      logout: "लॉग आउट",
+      status_in: "स्थिति: लॉग इन (व्यवस्थापक)",
+      status_out: "स्थिति: लॉग इन नहीं है"
+    }
+  };
+
+  let currentLang = 'en';
+  let isAdmin = false;
+
+  function updateSettingsUI() {
+    // Auth UI
+    document.getElementById("authStatus").textContent = isAdmin ? I18N[currentLang].status_in : I18N[currentLang].status_out;
+    document.getElementById("authStatus").style.color = isAdmin ? "var(--success)" : "var(--danger)";
+    document.getElementById("btnLogin").style.display = isAdmin ? "none" : "block";
+    document.getElementById("btnLogout").style.display = isAdmin ? "block" : "none";
+
+    // Language UI
+    document.getElementById("settingsTitle").textContent = I18N[currentLang].settings;
+    document.getElementById("lblLang").textContent = I18N[currentLang].lang;
+    document.getElementById("lblAuth").textContent = I18N[currentLang].auth;
+    document.getElementById("btnLogin").textContent = I18N[currentLang].login;
+    document.getElementById("btnLogout").textContent = I18N[currentLang].logout;
+    
+    // Navigation & Headings
+    const navs = document.querySelectorAll(".nav-link");
+    if(navs.length >= 4) {
+       navs[0].textContent = I18N[currentLang].overview;
+       navs[1].textContent = I18N[currentLang].analytics;
+       navs[2].textContent = I18N[currentLang].feed;
+       navs[3].textContent = I18N[currentLang].intel;
+    }
+
+    const eyebrowElements = document.querySelectorAll(".eyebrow");
+    eyebrowElements.forEach(el => {
+      if(el.textContent.includes("Total Inspections") || el.textContent.includes("कुल निरीक्षण")) el.textContent = I18N[currentLang].total_insp;
+      if(el.textContent.includes("Compliant Packages") || el.textContent.includes("अनुपालन पैकेज")) el.textContent = I18N[currentLang].compliant_pkgs;
+      if(el.textContent.includes("Violations Flagged") || el.textContent.includes("उल्लंघन दर्ज")) el.textContent = I18N[currentLang].violations;
+      if(el.textContent.includes("National Compliance") || el.textContent.includes("राष्ट्रीय अनुपालन")) el.textContent = I18N[currentLang].nat_comp;
+    });
+
+    const sectionElements = document.querySelectorAll(".section-title");
+    sectionElements.forEach(el => {
+      if(el.textContent.includes("Recent Scans") || el.textContent.includes("हाल के स्कैन")) el.textContent = I18N[currentLang].recent_scans;
+      if(el.textContent.includes("Violation Intelligence") || el.textContent.includes("उल्लंघन जानकारी")) el.textContent = I18N[currentLang].violation_intel;
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const btnSet = document.getElementById("btnSettings");
+    if (btnSet) {
+      btnSet.addEventListener("click", () => {
+        document.getElementById("settingsBackdrop").classList.add("show");
+        icons();
+      });
+    }
+
+    const btnClose = document.getElementById("settingsClose");
+    if (btnClose) {
+      btnClose.addEventListener("click", () => document.getElementById("settingsBackdrop").classList.remove("show"));
+    }
+
+    const langRadios = document.querySelectorAll("input[name='lang']");
+    langRadios.forEach(r => r.addEventListener("change", (e) => {
+       currentLang = e.target.value;
+       updateSettingsUI();
+       toast({ tone: "info", title: "Language Changed", msg: currentLang === 'hi' ? "हिंदी भाषा लागू की गई" : "English language applied" });
+    }));
+
+    document.getElementById("btnLogin")?.addEventListener("click", () => {
+       isAdmin = true;
+       updateSettingsUI();
+       toast({ tone: "success", title: "Authenticated", msg: "Admin access granted." });
+       setTimeout(() => document.getElementById("settingsBackdrop").classList.remove("show"), 1000);
+    });
+
+    document.getElementById("btnLogout")?.addEventListener("click", () => {
+       isAdmin = false;
+       updateSettingsUI();
+       toast({ tone: "info", title: "Logged Out", msg: "Admin session closed." });
+    });
+  });
 
   /* ---------------------------------------------------------------- loader */
   function runLoader() {
