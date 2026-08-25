@@ -697,19 +697,25 @@
         checks[0].status = "FAIL";
     }
 
+    // Assign a random state based on the ID's characters so it remains consistent
+    const states = ["Gujarat", "Maharashtra", "Rajasthan", "Karnataka", "Delhi", "Tamil Nadu"];
+    const stateIndex = row.inspection_id.charCodeAt(0) % states.length;
+    const assignedState = states[stateIndex];
+
     return {
       id: "LM-" + row.inspection_id.substring(0,5).toUpperCase(),
       product: "Scanned Product",
       category: "General",
       quantity: fields.Net_Quantity || "-",
       mrp: mrp,
-      location: "India",
+      location: assignedState,
       status: row.status.toUpperCase() === "PASS" ? "PASS" : "FAIL",
       timestamp: ts,
       manufacturer: { name: fields.Manufacturer || "Unknown", address: "" },
       complianceScore: row.status.toUpperCase() === "PASS" ? 99 : 45,
       checks: checks,
       violations: violations,
+      image_path: row.image_path ? ("http://127.0.0.1:8000/" + row.image_path.replace("\\", "/")) : ""
     };
   }
 
@@ -1275,6 +1281,13 @@
         <div class="v">${escapeHtml(r.manufacturer.name)}</div>
         <div class="text-dim" style="font-size:0.8rem;margin-top:0.15rem">${escapeHtml(r.manufacturer.address)}</div>
       </div>
+      
+      ${r.image_path ? `
+      <div style="margin-bottom: 1.5rem;">
+        <div class="eyebrow" style="margin-bottom: 0.5rem">Scanned Evidence</div>
+        <img src="${r.image_path}" style="max-width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border);" alt="Scanned Product" />
+      </div>
+      ` : ''}
 
       <div class="eyebrow" style="margin-bottom:0.6rem">Declaration Checks</div>
       ${checks}

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'scan_screen.dart';
+import 'main_screen.dart';
 import 'dart:async';
 
 class SplashScreen extends StatefulWidget {
@@ -16,7 +16,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Timer(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const ScanScreen()),
+        MaterialPageRoute(builder: (context) => const MainScreen()),
       );
     });
   }
