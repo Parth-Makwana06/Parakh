@@ -142,10 +142,10 @@
           <span class="term-chip">Team InsightX</span>
           <span class="term-chip" id="navStatus"><span class="dot dot-pulse"></span> System Online</span>
           <button class="clay-icon" id="btnSettings" aria-label="Settings" style="margin-left:8px; width:32px; height:32px"><i data-lucide="settings"></i></button>
-          <label class="switch" title="Toggle live inspection simulation">
+          <label class="switch" title="Toggle real-time database sync">
             <input type="checkbox" id="liveToggle" />
             <span class="track"><span class="thumb"></span></span>
-            <span class="eyebrow" style="font-size:0.62rem">Live Sim</span>
+            <span class="eyebrow" style="font-size:0.62rem">Live Sync</span>
           </label>
         </div>
 
@@ -1580,8 +1580,8 @@
       ? `<span class="dot dot-pulse"></span> Live Monitoring`
       : `<span class="dot dot-pulse"></span> System Online`;
     clearTimeout(state.liveTimer);
-    if (on) { scheduleLive(); toast({ tone: "info", title: "Live simulation on", msg: "New inspections will stream in automatically." }); }
-    else toast({ tone: "warn", title: "Live simulation paused", msg: "Automatic updates are off." });
+    if (on) { scheduleLive(); toast({ tone: "info", title: "Live Sync On", msg: "Scanning database for new real-time updates." }); }
+    else toast({ tone: "warn", title: "Live Sync Paused", msg: "Automatic updates are off." });
   }
 
   /* ---------------------------------------------------------------- feed error state */
