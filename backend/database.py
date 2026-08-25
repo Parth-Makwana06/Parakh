@@ -72,3 +72,21 @@ def get_all_inspections() -> List[Dict[str, Any]]:
             "image_path": row["image_path"]
         })
     return inspections
+
+def get_inspection(inspection_id: str) -> Dict[str, Any]:
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM inspections WHERE inspection_id = ?', (inspection_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return {
+            "inspection_id": row["inspection_id"],
+            "timestamp": row["timestamp"],
+            "status": row["status"],
+            "total_violations": row["total_violations"],
+            "violations_list": json.loads(row["violations_list"]) if row["violations_list"] else [],
+            "extracted_fields": json.loads(row["extracted_fields"]) if row["extracted_fields"] else {},
+            "image_path": row["image_path"]
+        }
+    return None

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'main_screen.dart';
 import 'dart:async';
+import '../services/settings_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,42 +24,46 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/images/logo.jpg',
-              width: 180,
-              height: 180,
+    return ListenableBuilder(
+      listenable: settingsService,
+      builder: (context, child) {
+        return Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/images/logo.jpg',
+                  width: 180,
+                  height: 180,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  settingsService.translate('app_title_parakh'),
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                    letterSpacing: 2.0,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  settingsService.translate('inspector_portal'),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'PARAKH',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1B365D),
-                letterSpacing: 2.0,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Legal Metrology Inspector Portal',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 40),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1B365D)),
-            ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
+    });
   }
 }

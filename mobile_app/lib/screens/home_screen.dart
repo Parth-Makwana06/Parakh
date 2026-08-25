@@ -1,36 +1,38 @@
 import 'package:flutter/material.dart';
+import 'profile_screen.dart';
+import '../services/settings_service.dart';
+import '../services/history_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Parakh Dashboard'),
-        backgroundColor: const Color(0xFF1B365D),
-        foregroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Welcome, Inspector',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1B365D),
-              ),
-            ),
+    return ListenableBuilder(
+      listenable: Listenable.merge([settingsService, historyService]),
+      builder: (context, child) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  settingsService.translate('welcome'),
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+
             const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
                   child: _buildStatCard(
-                    'Pending\nInspections',
-                    '12',
+                    context,
+                    settingsService.translate('pending_inspections'),
+                    '${20 - historyService.items.length > 0 ? 20 - historyService.items.length : 0}',
                     Icons.pending_actions,
                     Colors.orange,
                   ),
@@ -38,8 +40,9 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildStatCard(
-                    'Completed\nToday',
-                    '5',
+                    context,
+                    settingsService.translate('completed_today'),
+                    '${historyService.items.length}',
                     Icons.check_circle_outline,
                     Colors.green,
                   ),
@@ -47,33 +50,39 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Recent Activities',
+            Text(
+              settingsService.translate('recent_activities'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF1B365D),
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: 12),
-            _buildActivityItem('Shop XYZ Inspection', 'Approved - 2 hours ago'),
-            _buildActivityItem('ABC Traders', 'Rejected - 5 hours ago'),
-            _buildActivityItem('Supermart', 'Pending Review - 1 day ago'),
+            if (historyService.items.isEmpty)
+              Text('No recent scans yet.', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))
+            else
+              ...historyService.items.take(5).map((e) => _buildActivityItem(
+                context, 
+                e.result.extractedFields.mfgDeclaration ? 'Compliant Item' : 'Non-Compliant Item', 
+                '${e.result.totalViolations} violations found'
+              )),
           ],
         ),
-      ),
+      );
+      },
     );
   }
 
-  Widget _buildStatCard(String title, String count, IconData icon, Color color) {
+  Widget _buildStatCard(BuildContext context, String title, String count, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -86,7 +95,7 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             count,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
@@ -94,8 +103,8 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             title,
-            style: const TextStyle(
-              color: Colors.black54,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 14,
             ),
           ),
@@ -104,22 +113,22 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActivityItem(String title, String subtitle) {
+  Widget _buildActivityItem(BuildContext context, String title, String subtitle) {
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: Theme.of(context).colorScheme.surfaceContainerHighest),
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: const Color(0xFF1B365D).withOpacity(0.1),
-          child: const Icon(Icons.history, color: Color(0xFF1B365D)),
+          backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+          child: Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+        title: Text(title, style: TextStyle(fontWeight: FontWeight.w500)),
         subtitle: Text(subtitle),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: Icon(Icons.arrow_forward_ios, size: 16),
       ),
     );
   }

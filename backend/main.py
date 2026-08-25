@@ -132,23 +132,15 @@ async def download_notice(inspection_id: str):
     Generates and returns a downloadable legal notice PDF for a given inspection ID.
     """
     try:
-        # Hackathon Demo: Serve the beautiful sample PDF instead of generating the plain text one
-        sample_pdf_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "parakh inspection.pdf")
+        pdf_path = pdf_generator.generate_legal_notice_pdf(inspection_id)
+        if not os.path.exists(pdf_path):
+            raise HTTPException(status_code=404, detail="Notice could not be generated or found.")
         
-        if os.path.exists(sample_pdf_path):
-            return FileResponse(
-                path=sample_pdf_path,
-                media_type="application/pdf",
-                filename=f"Parakh_Inspection_Report_{inspection_id}.pdf"
-            )
-        else:
-            # Fallback to generated if sample not found
-            pdf_path = pdf_generator.generate_legal_notice_pdf(inspection_id)
-            return FileResponse(
-                path=pdf_path,
-                media_type="application/pdf",
-                filename=f"Legal_Notice_{inspection_id}.pdf"
-            )
+        return FileResponse(
+            path=pdf_path,
+            media_type="application/pdf",
+            filename=f"Parakh_Report_{inspection_id}.pdf"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
