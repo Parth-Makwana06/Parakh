@@ -780,7 +780,7 @@
 
   async function getInspectionData() {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/history");
+      const res = await fetch("http://127.0.0.1:8000/api/history?t=" + Date.now());
       if (!res.ok) throw new Error("DATA STREAM INTERRUPTED");
       const raw = await res.json();
       if (raw.length === 0) {
@@ -860,7 +860,7 @@
   }
 
   /* ---------------------------------------------------------------- state */
-  const INITIAL_VISIBLE = 8, STEP = 6;
+  const INITIAL_VISIBLE = 50, STEP = 20;
   const state = {
     inspections: [],
     stats: null,
@@ -1574,6 +1574,7 @@
     const newLen = state.inspections ? state.inspections.length : 0;
     
     if (newLen > oldLen) {
+      applyFilters();
       renderTable({ animate: true });
       renderKPIs();
       renderViolations();
