@@ -920,6 +920,7 @@
   /* ---------------------------------------------------------------- Settings & Auth */
   
   /* ---------------------------------------------------------------- Auth & Translations */
+
   const I18N = {
     en: {
       settings: "System Settings", lang: "Language Preferences", auth: "Admin Authentication",
@@ -946,36 +947,27 @@
   };
 
   let currentLang = localStorage.getItem("parakh_lang") || 'en';
-  let isAdmin = sessionStorage.getItem("parakh_admin") === "true";
+  let isAdmin = true;
 
   function translatePage() {
     const dict = I18N[currentLang];
     
-    // Auth Modal & Login Overlay
-    if(document.getElementById("authStatus")) document.getElementById("authStatus").textContent = isAdmin ? dict.status_in : dict.status_out;
-    if(document.getElementById("btnLogin")) document.getElementById("btnLogin").textContent = dict.btn_login;
+    if(document.getElementById("authStatus")) document.getElementById("authStatus").textContent = dict.status_in;
     if(document.getElementById("btnLogout")) document.getElementById("btnLogout").textContent = dict.btn_logout;
     if(document.getElementById("settingsTitle")) document.getElementById("settingsTitle").textContent = dict.settings;
     if(document.getElementById("lblLang")) document.getElementById("lblLang").textContent = dict.lang;
     if(document.getElementById("lblAuth")) document.getElementById("lblAuth").textContent = dict.auth;
-    
-    if(document.getElementById("txtLoginTitle")) document.getElementById("txtLoginTitle").textContent = dict.login_title;
-    if(document.getElementById("txtLoginSub")) document.getElementById("txtLoginSub").textContent = dict.login_sub;
-    if(document.getElementById("btnOverlayLogin")) document.getElementById("btnOverlayLogin").textContent = dict.btn_overlay;
     if(document.getElementById("searchInput")) document.getElementById("searchInput").placeholder = dict.search;
     if(document.getElementById("loadMoreBtn")) document.getElementById("loadMoreBtn").textContent = dict.btn_load;
 
-    // Navigation
     const navs = document.querySelectorAll(".nav-link");
     if(navs.length >= 4) {
        navs[0].textContent = dict.overview; navs[1].textContent = dict.analytics;
        navs[2].textContent = dict.feed; navs[3].textContent = dict.intel;
     }
 
-    // Replace all static text nodes by looking at their content
     document.querySelectorAll(".eyebrow, .section-title, th, button[data-status]").forEach(el => {
       if(!el.childNodes || el.childNodes.length === 0) return;
-      // For elements with children (like buttons with spans), we only want to translate the text node
       el.childNodes.forEach(node => {
         if (node.nodeType === Node.TEXT_NODE) {
             let t = node.textContent.trim().toLowerCase();
@@ -1000,44 +992,30 @@
       });
     });
 
-    // Check radio buttons
     const langRadios = document.querySelectorAll("input[name='lang']");
     langRadios.forEach(r => { if(r.value === currentLang) r.checked = true; });
   }
 
-  function handleLogin() {
-    const user = document.getElementById("adminUser").value;
-    const pass = document.getElementById("adminPass").value;
-    if(user === "admin" && pass === "admin123") {
-       isAdmin = true;
-       sessionStorage.setItem("parakh_admin", "true");
-       document.getElementById("loginOverlay").style.display = "none";
-       document.getElementById("loginError").style.display = "none";
-       translatePage();
-       toast({ tone: "success", title: "Authenticated", msg: "Admin access granted." });
-    } else {
-       document.getElementById("loginError").style.display = "block";
-    }
-  }
-
   function handleLogout() {
-    isAdmin = false;
     sessionStorage.removeItem("parakh_admin");
-    document.getElementById("loginOverlay").style.display = "flex";
-    document.getElementById("settingsBackdrop").classList.remove("show");
-    translatePage();
+    window.location.href = "login.html";
   }
 
   function attachAuthEvents() {
-    if(!isAdmin) document.getElementById("loginOverlay").style.display = "flex";
-    else document.getElementById("loginOverlay").style.display = "none";
+    const btnSet = document.getElementById("btnSettings");
+    if (btnSet) {
+      btnSet.addEventListener("click", () => {
+        document.getElementById("settingsBackdrop").classList.add("show");
+        icons();
+      });
+    }
 
-    document.getElementById("btnOverlayLogin")?.addEventListener("click", handleLogin);
+    const btnClose = document.getElementById("settingsClose");
+    if (btnClose) {
+      btnClose.addEventListener("click", () => document.getElementById("settingsBackdrop").classList.remove("show"));
+    }
+
     document.getElementById("btnLogout")?.addEventListener("click", handleLogout);
-    document.getElementById("btnLogin")?.addEventListener("click", () => {
-       document.getElementById("settingsBackdrop").classList.remove("show");
-       document.getElementById("loginOverlay").style.display = "flex";
-    });
 
     document.querySelectorAll("input[name='lang']").forEach(r => r.addEventListener("change", (e) => {
        currentLang = e.target.value;
@@ -1045,7 +1023,6 @@
        translatePage();
        toast({ tone: "info", title: "Language Changed", msg: currentLang === 'hi' ? "हिंदी भाषा लागू की गई" : "English language applied" });
        
-       // Re-render table and violations to translate dynamic content
        renderTable({animate: false});
        renderViolations();
     }));
@@ -1053,7 +1030,7 @@
     translatePage();
   }
 
-  /* ---------------------------------------------------------------- loader */
+/* ---------------------------------------------------------------- loader */
   function runLoader() {
     return new Promise((resolve) => {
       const lines = $$("#loaderTerm [data-line]");
