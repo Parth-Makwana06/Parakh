@@ -829,12 +829,42 @@
   }
 
   async function loadData() {
-    const [records, stats] = await Promise.all([
+    const [records, baseStats] = await Promise.all([
       window.MetroData.getInspectionData(),
       Promise.resolve(window.MetroData.getNationalStats()),
     ]);
     if (records !== null) { state.inspections = records; }
-    state.stats = stats;
+    
+    // Dynamically override baseStats with REAL computed data from our FastAPI records!
+    let total = state.inspections.length;
+    let compliant = state.inspections.filter(r => r.status === "PASS").length;
+    let fails = total - compliant;
+    let compRate = total > 0 ? parseFloat(((compliant/total)*100).toFixed(1)) : 0;
+    
+    baseStats.kpis.inspectionsToday.value = total;
+    baseStats.kpis.compliantPackages.value = compliant;
+    baseStats.kpis.violationsFlagged.value = fails;
+    baseStats.kpis.nationalCompliance.value = compRate;
+    
+    baseStats.breakdown.compliant = compliant;
+    baseStats.breakdown.violations = fails;
+    
+    let violCounts = {};
+    state.inspections.forEach(r => {
+        (r.violations || []).forEach(v => {
+            let rule = v.split(":")[0] || v;
+            violCounts[rule] = (violCounts[rule] || 0) + 1;
+        });
+    });
+    
+    let sortedV = Object.entries(violCounts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e => ({type: e[0], count: e[1]}));
+    if (sortedV.length > 0) {
+        baseStats.violationBreakdown = sortedV;
+    } else if (total > 0) {
+        baseStats.violationBreakdown = [{type: "No violations detected", count: 0}];
+    }
+    
+    state.stats = baseStats;
   }
 
   /* ---------------------------------------------------------------- loader */
