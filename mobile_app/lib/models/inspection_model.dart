@@ -50,13 +50,32 @@ class ExtractedFields {
   });
 
   factory ExtractedFields.fromJson(Map<String, dynamic> json) {
+    // Helper: returns non-null, non-empty, non-'Missing' value from multiple keys
+    String? pick(List<String> keys) {
+      for (final k in keys) {
+        final v = json[k]?.toString();
+        if (v != null && v.isNotEmpty && v.toLowerCase() != 'missing') return v;
+      }
+      return null;
+    }
+
     return ExtractedFields(
-      mrp: json['mrp']?.toString() ?? json['MRP']?.toString() ?? json['price']?.toString(),
-      netQty: json['net_qty']?.toString() ?? json['Net_Quantity']?.toString() ?? json['net_quantity']?.toString() ?? json['quantity']?.toString(),
-      mfgDate: json['mfg_date']?.toString() ?? json['Mfg_Date']?.toString() ?? json['mfg']?.toString() ?? json['date']?.toString(),
-      consumerPhone: json['consumer_phone']?.toString() ?? json['Consumer_Care']?.toString() ?? json['care']?.toString() ?? json['phone']?.toString(),
-      consumerEmail: json['consumer_email']?.toString() ?? json['email']?.toString(),
-      mfgDeclaration: json['mfg_declaration'] == true || json['Manufacturer'] != null || json['mfg'] != null || json['address'] != null,
+      // Gemini returns "MRP"; also handles legacy keys
+      mrp: pick(['MRP', 'mrp', 'price']),
+      // Gemini returns "Net_Quantity"
+      netQty: pick(['Net_Quantity', 'net_qty', 'net_quantity', 'quantity']),
+      // Gemini returns "Mfg_Date"
+      mfgDate: pick(['Mfg_Date', 'mfg_date', 'mfg', 'date']),
+      // Gemini returns "Consumer_Care" as single field (phone + email combined)
+      consumerPhone: pick(['Consumer_Care', 'consumer_phone', 'care', 'phone']),
+      consumerEmail: pick(['consumer_email', 'email']),
+      // Gemini returns "Manufacturer"
+      mfgDeclaration: json['mfg_declaration'] == true ||
+          (json['Manufacturer'] != null &&
+              json['Manufacturer'].toString().isNotEmpty &&
+              json['Manufacturer'].toString().toLowerCase() != 'missing') ||
+          json['mfg'] != null ||
+          json['address'] != null,
     );
   }
 }
