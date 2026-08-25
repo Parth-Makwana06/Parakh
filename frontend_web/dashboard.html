@@ -1468,42 +1468,76 @@
     toast({ tone: "success", title: "Report generated", msg: `Inspection ${r.id} report downloaded.` });
   }
 
-  function buildReportHTML(r) {
+    function buildReportHTML(r) {
     const rows = r.checks.map((c) => `<tr><td>${escapeHtml(c.label)}</td><td class="${c.status === "PASS" ? "ok" : "bad"}">${c.status}</td></tr>`).join("");
-    const viol = r.violations.length ? r.violations.map((v) => `<li>${escapeHtml(v)}</li>`).join("") : "<li>None — all mandatory declarations present.</li>";
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>MetrologyLens Report ${r.id}</title>
+    const viol = r.violations.length ? r.violations.map((v) => `<li class="bad">${escapeHtml(v)}</li>`).join("") : "<li class='ok'>No violations detected — all mandatory declarations present.</li>";
+    const imgHtml = r.image_path ? `<div style="text-align:center; margin-top:16px; margin-bottom:16px"><img src="${r.image_path}" style="max-width:100%; max-height:450px; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05)"></div>` : "";
+    
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Parakh Inspection Report ${r.id}</title>
       <style>
-        body{font-family:Arial,Helvetica,sans-serif;color:#1b2733;max-width:760px;margin:32px auto;padding:0 24px;line-height:1.5}
-        .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0d7a54;padding-bottom:14px}
-        h1{font-size:20px;margin:0;color:#0d7a54} .sub{color:#667;font-size:12px}
-        h2{font-size:14px;margin:26px 0 8px;text-transform:uppercase;letter-spacing:.06em;color:#0d7a54}
-        table{width:100%;border-collapse:collapse;font-size:14px} td,th{border:1px solid #dde3ea;padding:8px 10px;text-align:left}
-        .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px}
-        .grid div{border:1px solid #dde3ea;border-radius:6px;padding:8px 10px} .k{color:#889;font-size:11px;text-transform:uppercase}
-        .ok{color:#0d7a54;font-weight:700} .bad{color:#c0392b;font-weight:700}
-        .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px}
-        .p{background:#e4f7ef;color:#0d7a54} .f{background:#fdeaea;color:#c0392b}
-        .print{margin-top:24px}.print button{background:#0d7a54;color:#fff;border:0;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:14px}
-        @media print{.print{display:none}}
+        body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;color:#1e293b;max-width:800px;margin:40px auto;padding:0 32px;line-height:1.6}
+        .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0891b2;padding-bottom:20px; margin-bottom:28px}
+        h1{font-size:26px;margin:0;color:#0f172a; font-weight:800; letter-spacing: 0.02em} .sub{color:#64748b;font-size:14px; margin-top:6px; font-weight:500}
+        h2{font-size:16px;margin:36px 0 16px;text-transform:uppercase;letter-spacing:.08em;color:#0f172a; border-bottom:1px solid #e2e8f0; padding-bottom:8px}
+        table{width:100%;border-collapse:collapse;font-size:14px; margin-bottom:20px} 
+        td,th{border:1px solid #e2e8f0;padding:12px 16px;text-align:left}
+        th{background-color:#f8fafc; color:#334155; font-weight:700}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:14px}
+        .grid div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px} .k{color:#64748b;font-size:11px;text-transform:uppercase; font-weight:700; margin-bottom:6px}
+        .v{font-weight: 600; font-size:15px; color:#0f172a}
+        .ok{color:#16a34a;font-weight:700} .bad{color:#dc2626;font-weight:700}
+        .badge{display:inline-block;padding:6px 14px;border-radius:999px;font-weight:700;font-size:13px}
+        .p{background:#dcfce7;color:#16a34a; border: 1px solid #bbf7d0} .f{background:#fee2e2;color:#dc2626; border: 1px solid #fecaca}
+        .print{margin-top:40px; text-align:center}.print button{background:#0891b2;color:#fff;border:0;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:15px; font-weight:600; box-shadow:0 4px 6px rgba(8,145,178,0.2)}
+        .print button:hover{background:#06b6d4}
+        .footer{margin-top:60px; text-align:center; font-size:12px; color:#94a3b8; border-top:1px solid #e2e8f0; padding-top:24px}
+        @media print{
+            .print{display:none}
+            body { margin: 0; padding: 20px; }
+            .grid div { break-inside: avoid; }
+        }
       </style></head><body>
 
-  <div class="hd"><div><h1>MetrologyLens AI — Inspection Report</h1><div class="sub">Department of Consumer Affairs • Legal Metrology • Prototype</div></div>
-        <span class="badge ${r.status === "PASS" ? "p" : "f"}">${r.status}</span></div>
-      <h2>Summary</h2>
-      <div class="grid">
-        <div><div class="k">Inspection ID</div>${r.id}</div>
-        <div><div class="k">Compliance Score</div>${r.complianceScore} / 100</div>
-        <div><div class="k">Product</div>${escapeHtml(r.product)} (${escapeHtml(r.category)})</div>
-        <div><div class="k">Net Quantity</div>${escapeHtml(r.quantity)}</div>
-        <div><div class="k">MRP</div>₹${r.mrp}</div>
-        <div><div class="k">Location</div>${escapeHtml(r.location)}</div>
-        <div><div class="k">Manufacturer</div>${escapeHtml(r.manufacturer.name)}</div>
-        <div><div class="k">Inspected</div>${new Date(r.timestamp).toLocaleString("en-IN")}</div>
+      <div class="hd">
+        <div>
+          <h1 style="color:#0891b2">PARAKH (परख)</h1>
+          <div class="sub">National Legal Metrology Monitoring Portal<br>Official Inspection Report</div>
+        </div>
+        <div style="text-align:right">
+           <div style="font-size:11px; color:#64748b; font-weight:700; margin-bottom:6px; text-transform:uppercase">Inspection Status</div>
+           <span class="badge ${r.status === "PASS" ? "p" : "f"}">${r.status === "PASS" ? "COMPLIANT (पास)" : "VIOLATION DETECTED (फेल)"}</span>
+        </div>
       </div>
-      <h2>Declaration Checks</h2>
-      <table><thead><tr><th>Declaration</th><th>Result</th></tr></thead><tbody>${rows}</tbody></table>
-      <h2>Violations</h2><ul>${viol}</ul>
-      <div class="print"><button onclick="window.print()">Print / Save as PDF</button></div>
+      
+      <h2>Inspection Summary</h2>
+      <div class="grid">
+        <div><div class="k">Inspection ID</div><div class="v" style="font-family:monospace">${r.id}</div></div>
+        <div><div class="k">Compliance Score</div><div class="v">${r.complianceScore} / 100</div></div>
+        <div><div class="k">Scan Location</div><div class="v">${escapeHtml(r.location)}</div></div>
+        <div><div class="k">Date & Time</div><div class="v">${new Date(r.timestamp).toLocaleString("en-IN", {dateStyle:"long", timeStyle:"medium"})}</div></div>
+      </div>
+
+      <h2>Product Details</h2>
+      <div class="grid">
+        <div><div class="k">Product Type</div><div class="v">${escapeHtml(r.product)} (${escapeHtml(r.category)})</div></div>
+        <div><div class="k">Declared Net Quantity</div><div class="v">${escapeHtml(r.quantity)}</div></div>
+        <div><div class="k">Declared MRP</div><div class="v">₹ ${r.mrp}</div></div>
+        <div><div class="k">Manufacturer / Packer</div><div class="v">${escapeHtml(r.manufacturer.name)}<br><span style="font-size:12px; font-weight:500; color:#64748b; margin-top:4px; display:inline-block">${escapeHtml(r.manufacturer.address)}</span></div></div>
+      </div>
+      
+      ${r.image_path ? `<h2>Scanned Evidence</h2>${imgHtml}` : ''}
+
+      <h2>Rule Compliance Checks</h2>
+      <table><thead><tr><th>Mandatory Declaration</th><th>AI Verification Status</th></tr></thead><tbody>${rows}</tbody></table>
+      
+      <h2>Identified Violations</h2>
+      <ul style="line-height:1.8">${viol}</ul>
+      
+      <div class="footer">
+        Generated securely by Parakh AI System on ${new Date().toLocaleString("en-IN")}.<br>
+        This is a digitally generated document intended for Legal Metrology enforcement workflows.
+      </div>
+      <div class="print"><button onclick="window.print()">🖨️ Print / Save as PDF</button></div>
       </body></html>`;
   }
 
