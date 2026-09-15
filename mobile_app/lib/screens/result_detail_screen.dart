@@ -26,7 +26,7 @@ class ResultDetailScreen extends StatelessWidget {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text('Scan Details'),
+        title: const Text('Scan Details'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
@@ -95,7 +95,7 @@ class ResultDetailScreen extends StatelessWidget {
     final textColor = isCompliant ? Theme.of(context).colorScheme.onPrimaryContainer : Theme.of(context).colorScheme.onErrorContainer;
 
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(14),
@@ -133,7 +133,7 @@ class ResultDetailScreen extends StatelessWidget {
 
   Widget _buildExtractedFieldsCard(BuildContext context, ExtractedFields fields) {
     return Container(
-      padding: EdgeInsets.all(14),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
@@ -156,7 +156,7 @@ class ResultDetailScreen extends StatelessWidget {
 
   Widget _buildInfoRow(BuildContext context, String title, String value, bool isFound) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,8 +188,8 @@ class ResultDetailScreen extends StatelessWidget {
         Text(settingsService.translate('legal_violations'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Theme.of(context).colorScheme.onSurface)),
         const SizedBox(height: 8),
         ...violations.map((v) => Container(
-              margin: EdgeInsets.only(bottom: 8),
-              padding: EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.errorContainer,
                 borderRadius: BorderRadius.circular(10),
@@ -209,7 +209,7 @@ class ResultDetailScreen extends StatelessWidget {
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.error,
                           borderRadius: BorderRadius.circular(4),

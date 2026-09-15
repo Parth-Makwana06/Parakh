@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parakh Admin - Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --navy: #1b365d;
+      --teal: #22d3ee;
+      --surface: #f8fafc;
+      --hair: #e2e8f0;
+      --danger: #ef4444;
+      --text: #0f172a;
+    }
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      background: var(--surface);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+    .login-card {
+      background: #ffffff;
+      width: min(400px, 90%);
+      padding: 2.5rem 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      border: 1px solid var(--hair);
+      text-align: center;
+    }
+    .emblem {
+      color: var(--teal);
+      display: block;
+      margin: 0 auto 1.5rem;
+      width: 64px;
+      height: 64px;
+    }
+    .title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      color: #64748b;
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+    .input-field {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--hair);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: var(--teal);
+    }
+    .btn {
+      width: 100%;
+      padding: 0.85rem;
+      background: var(--teal);
+      color: var(--navy);
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+      margin-top: 0.5rem;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .btn:active {
+      transform: scale(0.98);
+    }
+    .error {
+      color: var(--danger);
+      font-size: 0.85rem;
+      margin-top: 1rem;
+      font-weight: 600;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <span class="emblem">
+      <svg width="100%" height="100%" viewBox="0 0 24 24">
+        <path d="M12 2l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V5l7-3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+    
+    <div class="title" id="txtTitle">PARAKH ADMIN</div>
+    <div class="subtitle" id="txtSub">Authorized Personnel Only</div>
+    
+    <input type="text" id="username" class="input-field" placeholder="Username" value="admin">
+    <input type="password" id="password" class="input-field" placeholder="Password" value="admin123">
+    
+    <button class="btn" onclick="login()" id="btnLogin">Secure Login</button>
+    <div class="error" id="errorMsg">Invalid Credentials</div>
+  </div>
+
+  <script>
+    // Bilingual logic for Login page
+    const I18N = {
+      en: { title: "PARAKH ADMIN", sub: "Authorized Personnel Only", user: "Username", pass: "Password", btn: "Secure Login", err: "Invalid Credentials" },
+      hi: { title: "परख एडमिन (PARAKH)", sub: "केवल अधिकृत कर्मचारी", user: "उपयोगकर्ता नाम", pass: "पासवर्ड", btn: "लॉग इन करें", err: "अमान्य क्रेडेंशियल्स" }
+    };
+    const lang = localStorage.getItem("parakh_lang") || "en";
+    document.getElementById("txtTitle").textContent = I18N[lang].title;
+    document.getElementById("txtSub").textContent = I18N[lang].sub;
+    document.getElementById("username").placeholder = I18N[lang].user;
+    document.getElementById("password").placeholder = I18N[lang].pass;
+    document.getElementById("btnLogin").textContent = I18N[lang].btn;
+    document.getElementById("errorMsg").textContent = I18N[lang].err;
+
+    function login() {
+      const u = document.getElementById("username").value;
+      const p = document.getElementById("password").value;
+      if (u === "admin" && p === "admin123") {
+        sessionStorage.setItem("parakh_admin", "true");
+        window.location.href = "dashboard.html";
+      } else {
+        document.getElementById("errorMsg").style.display = "block";
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") login();
+    });
+  </script>
+</body>
+</html>

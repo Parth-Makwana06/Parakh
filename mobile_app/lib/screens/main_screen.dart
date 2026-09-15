@@ -6,17 +6,27 @@ import 'history_screen.dart';
 import 'profile_screen.dart';
 import '../services/settings_service.dart';
 import '../services/api_service.dart';
+import '../services/history_service.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int initialIndex;
+  const MainScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex;
   bool _showProfile = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    // App start thay tyare j history load karo — Home screen reflect karsi
+    historyService.loadFromBackend();
+  }
 
   void _showServerConfigDialog() {
     final controller = TextEditingController(text: ApiService.customUrl);
@@ -26,7 +36,7 @@ class _MainScreenState extends State<MainScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(settingsService.translate('server_url'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          title: Text(settingsService.translate('server_url'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +68,7 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                   ActionChip(
                     backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    label: Text('USB (127.0.0.1:8000)', style: TextStyle(fontSize: 11)),
+                    label: const Text('USB (127.0.0.1:8000)', style: TextStyle(fontSize: 11)),
                     onPressed: () {
                       setDialogState(() {
                         controller.text = 'http://127.0.0.1:8000';
@@ -76,7 +86,7 @@ class _MainScreenState extends State<MainScreen> {
                   setDialogState(() => testStatus = ok ? '✅ Server Connected Online!' : '❌ Cannot reach server');
                 },
                 icon: const Icon(Icons.wifi_tethering, size: 16),
-                label: Text(settingsService.translate('test_connection'), style: TextStyle(fontSize: 12)),
+                label: Text(settingsService.translate('test_connection'), style: const TextStyle(fontSize: 12)),
               ),
               if (testStatus != null) ...[
                 const SizedBox(height: 6),

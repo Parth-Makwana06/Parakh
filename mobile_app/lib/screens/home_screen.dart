@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'profile_screen.dart';
 import '../services/settings_service.dart';
 import '../services/history_service.dart';
 
@@ -32,7 +31,7 @@ class HomeScreen extends StatelessWidget {
                   child: _buildStatCard(
                     context,
                     settingsService.translate('pending_inspections'),
-                    '${20 - historyService.items.length > 0 ? 20 - historyService.items.length : 0}',
+                    '${(30 - historyService.items.length) > 0 ? (30 - historyService.items.length) : 0}',
                     Icons.pending_actions,
                     Colors.orange,
                   ),
@@ -95,7 +94,7 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             count,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
@@ -126,9 +125,9 @@ class HomeScreen extends StatelessWidget {
           backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           child: Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
         ),
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.w500)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
         subtitle: Text(subtitle),
-        trailing: Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       ),
     );
   }

@@ -25,7 +25,7 @@ start "" "%~dp0frontend_web\login.html"
 
 echo.
 echo [4/4] Starting Flutter Mobile Application...
-start cmd /k "cd /d %~dp0mobile_app && title Parakh Mobile App && flutter run"
+start cmd /k "cd /d %~dp0mobile_app && title Parakh Mobile App && P:\flutter\bin\flutter.bat pub get && P:\flutter\bin\flutter.bat run"
 
 echo.
 echo ========================================================

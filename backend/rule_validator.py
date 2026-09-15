@@ -31,16 +31,17 @@ def validate_lmpc_rules(image_paths: List[str]) -> dict:
                 )
         
         prompt = """
-        You are a strict Legal Metrology (Packaged Commodities) Rules, 2011 inspector.
-        Analyze this product label image. 
+        You are a strict Legal Metrology (Packaged Commodities) Rules, 2011 inspector under the Department of Consumer Affairs (DoCA).
+        Analyze this product label image (or e-commerce product screenshot). 
         Extract the following fields if present: MRP, Net Quantity, Mfg/Packing Date, Consumer Care Details, Manufacturer/Marketer Address.
         
-        Check for these LMPC violations:
-        1. Is MRP present and clearly stated with 'Rs.' or '₹' and 'inclusive of all taxes'?
-        2. Is Net Quantity declared properly with standard units (g, kg, ml, L, U)?
-        3. Is Consumer Care phone number and email present?
-        4. Is Manufacturer/Marketer address present?
-        5. Are the declarations legible and grouped together?
+        Strictly check for these LMPC violations:
+        1. Rule 6(1)(e) & Rule 18: Is MRP present and clearly stated with 'Rs.' or '₹' and explicitly states 'inclusive of all taxes'?
+        2. Rule 11 & Rule 13: Is Net Quantity declared properly with correct SI standard units? (e.g., must be 'g' not 'gm' or 'gms', 'kg' not 'kgs', 'ml', 'L', or 'U').
+        3. Rule 6(1)(n): Are Consumer Care details (both valid Phone/Helpline AND Email) present?
+        4. Rule 6(1)(a): Is the complete Manufacturer/Marketer address present?
+        5. Rule 7 (Font Size): Visually estimate if the principal declarations (Net Quantity, MRP) are prominent and meet the minimum legible font height requirements relative to the package size. Flag if the text is abnormally small or unreadable.
+        6. Rule 6(10) (For E-commerce): If this is an e-commerce screenshot, are all mandatory declarations clearly visible on the digital display?
 
         Return a JSON object exactly in this format, with no markdown formatting or extra text:
         {
@@ -48,9 +49,9 @@ def validate_lmpc_rules(image_paths: List[str]) -> dict:
             "total_violations": <number>,
             "violations_list": [
                 {
-                    "rule": "Rule <number>",
+                    "rule": "Rule <number> (e.g., Rule 6(1)(e))",
                     "severity": "HIGH/MEDIUM/LOW",
-                    "description": "Explanation"
+                    "description": "Explanation of the exact violation"
                 }
             ],
             "extracted_fields": {

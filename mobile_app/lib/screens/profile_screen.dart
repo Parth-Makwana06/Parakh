@@ -21,7 +21,7 @@ class ProfileScreen extends StatelessWidget {
                   child: Icon(Icons.person, size: 50, color: Theme.of(context).colorScheme.onPrimary),
                 ),
                 const SizedBox(height: 20),
-                Text(
+                const Text(
                   'Ramesh Kumar',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
@@ -42,7 +42,7 @@ class ProfileScreen extends StatelessWidget {
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(settingsService.translate('login'))));
                     },
-                    icon: Icon(Icons.login),
+                    icon: const Icon(Icons.login),
                     label: Text(settingsService.translate('login')),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -56,7 +56,7 @@ class ProfileScreen extends StatelessWidget {
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(settingsService.translate('logout'))));
                     },
-                    icon: Icon(Icons.logout),
+                    icon: const Icon(Icons.logout),
                     label: Text(settingsService.translate('logout')),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -70,10 +70,10 @@ class ProfileScreen extends StatelessWidget {
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(settingsService.translate('delete_account'))));
                     },
-                    icon: Icon(Icons.delete_forever, color: Colors.red),
+                    icon: const Icon(Icons.delete_forever, color: Colors.red),
                     label: Text(
                       settingsService.translate('delete_account'),
-                      style: TextStyle(color: Colors.red),
+                      style: const TextStyle(color: Colors.red),
                     ),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),

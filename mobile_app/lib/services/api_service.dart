@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../models/inspection_model.dart';
 
@@ -19,7 +18,7 @@ class ApiService {
   }
 
   // Scan Product Multipart
-  static Future<InspectionResult> scanProductFiles(List<Map<String, dynamic>> files) async {
+  static Future<InspectionResult> scanProductFiles(List<Map<String, dynamic>> files, String location) async {
     final targetUrl = customUrl.trim().endsWith('/')
         ? customUrl.trim().substring(0, customUrl.trim().length - 1)
         : customUrl.trim();
@@ -29,7 +28,7 @@ class ApiService {
       final request = http.MultipartRequest('POST', uri);
       
       // Inspector Location
-      request.fields['location'] = 'Surat, Gujarat';
+      request.fields['location'] = location;
 
       for (var file in files) {
         request.files.add(
@@ -60,5 +59,21 @@ class ApiService {
         ? customUrl.trim().substring(0, customUrl.trim().length - 1)
         : customUrl.trim();
     return '$targetUrl/api/download-notice/$inspectionId';
+  }
+
+  // Fetch all past inspections from backend SQLite DB
+  static Future<List<Map<String, dynamic>>> fetchHistory() async {
+    final targetUrl = customUrl.trim().endsWith('/')
+        ? customUrl.trim().substring(0, customUrl.trim().length - 1)
+        : customUrl.trim();
+    try {
+      final uri = Uri.parse('$targetUrl/api/history');
+      final res = await http.get(uri).timeout(const Duration(seconds: 5));
+      if (res.statusCode == 200) {
+        final List<dynamic> data = json.decode(res.body);
+        return data.cast<Map<String, dynamic>>();
+      }
+    } catch (_) {}
+    return [];
   }
 }

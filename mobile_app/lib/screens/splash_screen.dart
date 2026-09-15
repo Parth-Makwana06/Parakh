@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'main_screen.dart';
 import 'dart:async';
 import '../services/settings_service.dart';
@@ -14,13 +15,41 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 3), () {
+    _checkAndNavigate();
+  }
+
+  Future<void> _checkAndNavigate() async {
+    // Camera thi image pending chhe ke nahi check karo
+    bool hasPendingCameraImage = false;
+    try {
+      final LostDataResponse response = await ImagePicker().retrieveLostData();
+      if (!response.isEmpty && response.file != null) {
+        hasPendingCameraImage = true;
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    if (hasPendingCameraImage) {
+      // Seedha Scan tab (index 1) par navigate karo — no 3 second wait
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const MainScreen()),
+        MaterialPageRoute(builder: (context) => const MainScreen(initialIndex: 1)),
       );
-    });
+    } else {
+      // Normal flow — 3 second splash
+      Timer(const Duration(seconds: 3), () {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+          );
+        }
+      });
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {

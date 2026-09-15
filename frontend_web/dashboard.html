@@ -892,6 +892,7 @@
     wireEvents();
     attachAuthEvents();
     seedActivity();
+    setLive(true); // Automatically turn on live monitoring
   }
 
   async function loadData() {
@@ -1593,12 +1594,14 @@
 
   function setLive(on) {
     state.live = on;
-    $("#liveToggle").checked = on;
+    const tg = $("#liveToggle"); if (tg) tg.checked = on;
     const m = $("#liveToggleMobile"); if (m) m.checked = on;
-    $("#offlinePill").classList.toggle("show", !on);
-    $("#navStatus").innerHTML = on
-      ? `<span class="dot dot-pulse"></span> Live Monitoring`
-      : `<span class="dot dot-pulse"></span> System Online`;
+    const op = $("#offlinePill"); if (op) op.classList.toggle("show", !on);
+    const ns = $("#navStatus"); if (ns) {
+      ns.innerHTML = on
+        ? `<span class="dot dot-pulse"></span> Live Monitoring`
+        : `<span class="dot dot-pulse"></span> System Online`;
+    }
     clearTimeout(state.liveTimer);
     if (on) { scheduleLive(); toast({ tone: "info", title: "Live Sync On", msg: "Scanning database for new real-time updates." }); }
     else toast({ tone: "warn", title: "Live Sync Paused", msg: "Automatic updates are off." });

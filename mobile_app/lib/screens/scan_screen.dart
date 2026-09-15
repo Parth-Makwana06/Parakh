@@ -1,11 +1,15 @@
 import 'dart:typed_data';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../models/inspection_model.dart';
 import '../services/api_service.dart';
 import '../services/history_service.dart';
 import '../services/settings_service.dart';
+import 'camera_screen.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -15,8 +19,8 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanScreenState extends State<ScanScreen> {
-  List<XFile> _pickedFiles = [];
-  List<Uint8List> _imageBytesList = [];
+  final List<XFile> _pickedFiles = [];
+  final List<Uint8List> _imageBytesList = [];
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   InspectionResult? _result;
@@ -66,14 +70,14 @@ class _ScanScreenState extends State<ScanScreen> {
           });
         }
       } else {
-        final XFile? file = await _picker.pickImage(
-          source: source,
-          maxWidth: 1280,
-          maxHeight: 1280,
-          imageQuality: 85,
+        // In-app camera — system camera nahi — app restart nahi thay!
+        final result = await Navigator.push<Map<String, dynamic>>(
+          context,
+          MaterialPageRoute(builder: (_) => const InAppCameraScreen()),
         );
-        if (file != null) {
-          final bytes = await file.readAsBytes();
+        if (result != null) {
+          final XFile file = result['file'] as XFile;
+          final Uint8List bytes = result['bytes'] as Uint8List;
           setState(() {
             _pickedFiles.add(file);
             _imageBytesList.add(bytes);
@@ -89,6 +93,36 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
+  Future<String> _getLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return 'Unknown Location';
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return 'Unknown Location';
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        return 'Unknown Location';
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium,
+          timeLimit: const Duration(seconds: 5));
+          
+      List<Placemark> placemarks = await Geocoding().placemarkFromCoordinates(position.latitude, position.longitude);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        return '${place.locality ?? place.subLocality ?? 'Unknown'}, ${place.administrativeArea ?? ''}';
+      }
+      return '${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)}';
+    } catch (e) {
+      return 'Unknown Location';
+    }
+  }
+
   Future<void> _analyzeImage() async {
     if (_imageBytesList.isEmpty) return;
 
@@ -98,6 +132,11 @@ class _ScanScreenState extends State<ScanScreen> {
     });
 
     try {
+      String locationStr = await _getLocation();
+      if (locationStr == 'Unknown Location' || locationStr == ', ') {
+          locationStr = 'Surat, Gujarat'; // Fallback
+      }
+
       List<Map<String, dynamic>> filesData = [];
       for (int i = 0; i < _pickedFiles.length; i++) {
         filesData.add({
@@ -106,7 +145,7 @@ class _ScanScreenState extends State<ScanScreen> {
         });
       }
 
-      final result = await ApiService.scanProductFiles(filesData);
+      final result = await ApiService.scanProductFiles(filesData, locationStr);
       setState(() {
         _result = result;
         _isLoading = false;
@@ -141,91 +180,8 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
-  void _showServerConfigDialog() {
-    final controller = TextEditingController(text: ApiService.customUrl);
-    String? testStatus;
 
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(settingsService.translate('server_url'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Selected FastAPI Server URL:', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                  hintText: 'http://192.168.0.214:8000',
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  ActionChip(
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                    label: Text('Wi-Fi (192.168.0.214:8000)', style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold)),
-                    onPressed: () {
-                      setDialogState(() {
-                        controller.text = 'http://192.168.0.214:8000';
-                        testStatus = null;
-                      });
-                    },
-                  ),
-                  ActionChip(
-                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    label: Text('USB (127.0.0.1:8000)', style: TextStyle(fontSize: 11)),
-                    onPressed: () {
-                      setDialogState(() {
-                        controller.text = 'http://127.0.0.1:8000';
-                        testStatus = null;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  setDialogState(() => testStatus = 'Testing connection...');
-                  final ok = await ApiService.testConnection(controller.text.trim());
-                  setDialogState(() => testStatus = ok ? '✅ Server Connected Online!' : '❌ Cannot reach server');
-                },
-                icon: const Icon(Icons.wifi_tethering, size: 16),
-                label: Text(settingsService.translate('test_connection'), style: TextStyle(fontSize: 12)),
-              ),
-              if (testStatus != null) ...[
-                const SizedBox(height: 6),
-                Text(testStatus!, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: testStatus!.startsWith('✅') ? Colors.green : Colors.red)),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(settingsService.translate('cancel'))),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  ApiService.customUrl = controller.text.trim();
-                });
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Server set to: ${ApiService.customUrl}')),
-                );
-              },
-              child: Text(settingsService.translate('save')),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -234,7 +190,7 @@ class _ScanScreenState extends State<ScanScreen> {
       listenable: settingsService,
       builder: (context, child) {
         return SingleChildScrollView(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -244,10 +200,10 @@ class _ScanScreenState extends State<ScanScreen> {
                     child: ElevatedButton.icon(
                       onPressed: () => _pickImage(ImageSource.camera),
                       icon: const Icon(Icons.camera_alt, color: Colors.white),
-                      label: Text(settingsService.translate('capture_photo'), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      label: Text(settingsService.translate('capture_photo'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: themeColor,
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
@@ -260,7 +216,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       label: Text(settingsService.translate('gallery'), style: TextStyle(color: themeColor, fontWeight: FontWeight.bold)),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: themeColor, width: 1.5),
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
@@ -276,7 +232,7 @@ class _ScanScreenState extends State<ScanScreen> {
                   borderRadius: BorderRadius.circular(16),
                   color: Theme.of(context).colorScheme.surface,
                   boxShadow: [
-                    BoxShadow(color: Theme.of(context).shadowColor.withValues(alpha: 0.1), blurRadius: 10, offset: Offset(0, 4)),
+                    BoxShadow(color: Theme.of(context).shadowColor.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4)),
                   ],
                 ),
                 child: Column(
@@ -284,7 +240,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     Stack(
                       children: [
                         ClipRRect(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                           child: SizedBox(
                             height: 240,
                             child: ListView.builder(
@@ -292,7 +248,7 @@ class _ScanScreenState extends State<ScanScreen> {
                               itemCount: _imageBytesList.length,
                               itemBuilder: (context, index) {
                                 return Padding(
-                                  padding: EdgeInsets.all(4.0),
+                                  padding: const EdgeInsets.all(4.0),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
                                     child: Image.memory(
@@ -320,7 +276,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     ),
                     if (_result == null)
                       Padding(
-                        padding: EdgeInsets.all(12.0),
+                        padding: const EdgeInsets.all(12.0),
                         child: Row(
                           children: [
                             Expanded(
@@ -328,9 +284,9 @@ class _ScanScreenState extends State<ScanScreen> {
                               child: OutlinedButton.icon(
                                 onPressed: _isLoading ? null : () => _pickImage(ImageSource.camera),
                                 icon: const Icon(Icons.add_a_photo, size: 18),
-                                label: Text(settingsService.translate('add'), style: TextStyle(fontWeight: FontWeight.bold)),
+                                label: Text(settingsService.translate('add'), style: const TextStyle(fontWeight: FontWeight.bold)),
                                 style: OutlinedButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(vertical: 14),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
                               ),
@@ -342,12 +298,12 @@ class _ScanScreenState extends State<ScanScreen> {
                                 onPressed: _isLoading ? null : _analyzeImage,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Theme.of(context).colorScheme.primary,
-                                  padding: EdgeInsets.symmetric(vertical: 14),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
                                 child: _isLoading
                                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                    : Text(settingsService.translate('analyze'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                                    : Text(settingsService.translate('analyze'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
                               ),
                             ),
                           ],
@@ -362,7 +318,7 @@ class _ScanScreenState extends State<ScanScreen> {
             // 3. Error Alert
             if (_errorMessage != null)
               Container(
-                padding: EdgeInsets.all(14),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.errorContainer,
                   borderRadius: BorderRadius.circular(12),
@@ -389,10 +345,10 @@ class _ScanScreenState extends State<ScanScreen> {
                 ElevatedButton.icon(
                   onPressed: () => _downloadPdf(_result!.inspectionId!),
                   icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
-                  label: Text(settingsService.translate('download_pdf'), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  label: Text(settingsService.translate('download_pdf'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.error,
-                    padding: EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -400,9 +356,9 @@ class _ScanScreenState extends State<ScanScreen> {
               OutlinedButton.icon(
                 onPressed: _resetScan,
                 icon: const Icon(Icons.refresh),
-                label: Text(settingsService.translate('scan_another'), style: TextStyle(fontWeight: FontWeight.bold)),
+                label: Text(settingsService.translate('scan_another'), style: const TextStyle(fontWeight: FontWeight.bold)),
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -422,7 +378,7 @@ class _ScanScreenState extends State<ScanScreen> {
     final textColor = isCompliant ? Theme.of(context).colorScheme.onPrimaryContainer : Theme.of(context).colorScheme.onErrorContainer;
 
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(14),
@@ -456,7 +412,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
   Widget _buildExtractedFieldsCard(BuildContext context, ExtractedFields fields) {
     return Container(
-      padding: EdgeInsets.all(14),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
@@ -479,7 +435,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
   Widget _buildInfoRow(String title, String value, bool isFound) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -511,8 +467,8 @@ class _ScanScreenState extends State<ScanScreen> {
         Text(settingsService.translate('legal_violations'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Theme.of(context).colorScheme.onSurface)),
         const SizedBox(height: 8),
         ...violations.map((v) => Container(
-              margin: EdgeInsets.only(bottom: 8),
-              padding: EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.errorContainer,
                 borderRadius: BorderRadius.circular(10),
@@ -526,12 +482,12 @@ class _ScanScreenState extends State<ScanScreen> {
                     children: [
                       Text(v.rule, style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onErrorContainer, fontSize: 12.5)),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.error,
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: Text(v.severity, style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                        child: Text(v.severity, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),

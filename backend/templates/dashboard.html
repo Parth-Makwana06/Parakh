@@ -13,7 +13,11 @@
 
   <!-- Tailwind (layout utilities) + Chart.js + Lucide icons, all via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
+    <script>
+    if (sessionStorage.getItem("parakh_admin") !== "true") {
+      window.location.href = "login.html";
+    }
+
     tailwind.config = { theme: { extend: { fontFamily: { sans: ["Inter", "sans-serif"] } } } };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -53,10 +57,28 @@
 .loader{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#f3f6f8;transition:opacity .45s ease,visibility .45s}.loader.done{opacity:0;visibility:hidden;pointer-events:none}.loader-box{width:min(440px,90%);text-align:center}.loader-emblem{width:70px;height:70px;margin:0 auto 1.2rem}.loader-term{text-align:left;font-family:"JetBrains Mono",monospace;font-size:.78rem;margin:1.3rem 0}.loader-term div{color:var(--ink-3);opacity:0}.loader-term div.on{color:var(--teal);opacity:1;animation:fadeIn .25s ease}.loader-bar{height:5px;border-radius:999px;background:#dfe9ed;overflow:hidden}.loader-bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--navy),var(--teal));transition:width .3s ease}.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s var(--ease-clay)}.reveal.in{opacity:1;transform:none}@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @media(max-width:767.98px){.nav-links,.nav-desktop{display:none}.mobile-menu-btn{display:inline-flex}.mobile-menu.open{display:block;animation:fadeIn .25s ease}.detail-grid{grid-template-columns:1fr}.toast-wrap{top:auto;bottom:1rem}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}.bg-grid{animation:none}}
+
+    .error { color: var(--danger); font-size: 0.85rem; margin-top: 1rem; font-weight: 600; display: none; }
+    
+    /* Hide Google Translate UI */
+    body { top: 0 !important; position: static !important; }
+    .skiptranslate { display: none !important; }
+    .goog-te-banner-frame { display: none !important; }
   </style>
+
 </head>
 
 <body>
+
+  <div id="google_translate_element" style="display:none;"></div>
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'en,hi', autoDisplay: false}, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+
   <!-- SVG defs: emblem + gradients -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
@@ -136,10 +158,11 @@
         <div class="nav-desktop items-center gap-2.5 hidden md:flex">
           <span class="term-chip">Team InsightX</span>
           <span class="term-chip" id="navStatus"><span class="dot dot-pulse"></span> System Online</span>
-          <label class="switch" title="Toggle live inspection simulation">
+          <button class="clay-icon" id="btnSettings" aria-label="Settings" style="margin-left:8px; width:32px; height:32px"><i data-lucide="settings"></i></button>
+          <label class="switch" title="Toggle real-time database sync">
             <input type="checkbox" id="liveToggle" />
             <span class="track"><span class="thumb"></span></span>
-            <span class="eyebrow" style="font-size:0.62rem">Live Sim</span>
+            <span class="eyebrow" style="font-size:0.62rem">Live Sync</span>
           </label>
         </div>
 
@@ -383,6 +406,42 @@
       </p>
     </footer>
   </main>
+
+
+  <!-- ============================ SETTINGS MODAL ============================ -->
+  <div class="modal-backdrop" id="settingsBackdrop" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="clay neon-edge modal" id="settingsModal" style="width:min(400px, 100%)">
+      <div class="flex items-center justify-between gap-3 p-5" style="border-bottom:1px solid var(--hair)">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="kpi-icon accent-teal" style="--acc:var(--teal);--acc-rgb:34,211,238"><i data-lucide="settings"></i></span>
+          <div class="min-w-0">
+            <div class="section-title" id="settingsTitle" style="font-size:1.1rem">System Settings</div>
+          </div>
+        </div>
+        <button class="clay-icon" id="settingsClose" aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body p-5">
+        
+        <div class="eyebrow" style="margin-bottom:0.8rem" id="lblLang">Language Preferences</div>
+        <div class="flex gap-4" style="margin-bottom:2rem">
+          <label style="display:flex;align-items:center;gap:0.5rem;font-weight:600;cursor:pointer">
+            <input type="radio" name="lang" value="en" checked> English
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;font-weight:600;cursor:pointer">
+            <input type="radio" name="lang" value="hi"> हिन्दी
+          </label>
+        </div>
+
+        <div class="eyebrow" style="margin-bottom:0.8rem" id="lblAuth">Admin Authentication</div>
+        <div id="authStatus" style="font-size:0.9rem; margin-bottom: 0.8rem; font-weight: 600; color: var(--danger)">Status: Not logged in</div>
+        <div class="flex gap-2">
+           
+           <button class="clay-btn clay-btn--sm" style="background:var(--danger); color:white;" id="btnLogout">Logout</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <!-- ============================ INSPECTION MODAL ============================ -->
   <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -697,34 +756,40 @@
         checks[0].status = "FAIL";
     }
 
+    // Assign a random state based on the ID's characters so it remains consistent
+    const states = ["Gujarat", "Maharashtra", "Rajasthan", "Karnataka", "Delhi", "Tamil Nadu"];
+    const stateIndex = row.inspection_id.charCodeAt(0) % states.length;
+    const assignedState = states[stateIndex];
+
     return {
       id: "LM-" + row.inspection_id.substring(0,5).toUpperCase(),
       product: "Scanned Product",
       category: "General",
       quantity: fields.Net_Quantity || "-",
       mrp: mrp,
-      location: "India",
+      location: fields.Location || assignedState,
       status: row.status.toUpperCase() === "PASS" ? "PASS" : "FAIL",
       timestamp: ts,
       manufacturer: { name: fields.Manufacturer || "Unknown", address: "" },
       complianceScore: row.status.toUpperCase() === "PASS" ? 99 : 45,
       checks: checks,
       violations: violations,
+      image_path: row.image_path ? ("http://127.0.0.1:8000/" + row.image_path.replace("\\", "/")) : ""
     };
   }
 
   async function getInspectionData() {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/history");
+      const res = await fetch("http://127.0.0.1:8000/api/history?t=" + Date.now());
       if (!res.ok) throw new Error("DATA STREAM INTERRUPTED");
       const raw = await res.json();
       if (raw.length === 0) {
-        return buildSeedInspections(); // Fallback if no real data
+        return []; // No real data yet, return empty list instead of dummy
       }
       return raw.map(normalizeApiRecord);
     } catch (e) {
-      console.warn("Using mock data because real API failed: ", e);
-      return buildSeedInspections();
+      console.warn("API failed, keeping previous data or showing empty list: ", e);
+      return null; // Return null on error so we don't blank out existing data
     }
   }
 
@@ -795,7 +860,7 @@
   }
 
   /* ---------------------------------------------------------------- state */
-  const INITIAL_VISIBLE = 8, STEP = 6;
+  const INITIAL_VISIBLE = 50, STEP = 20;
   const state = {
     inspections: [],
     stats: null,
@@ -825,19 +890,122 @@
     hideLoader();
     startEntrance();
     wireEvents();
+    attachAuthEvents();
     seedActivity();
+    setLive(true); // Automatically turn on live monitoring
   }
 
   async function loadData() {
-    const [records, stats] = await Promise.all([
+    const [records, baseStats] = await Promise.all([
       window.MetroData.getInspectionData(),
       Promise.resolve(window.MetroData.getNationalStats()),
     ]);
-    state.inspections = records;
-    state.stats = stats;
+    if (records !== null) { state.inspections = records; }
+    
+    // Dynamically override baseStats with REAL computed data from our FastAPI records!
+    let total = state.inspections.length;
+    let compliant = state.inspections.filter(r => r.status === "PASS").length;
+    let fails = total - compliant;
+    let compRate = total > 0 ? parseFloat(((compliant/total)*100).toFixed(1)) : 0;
+    
+    baseStats.kpis.inspectionsToday.value = total;
+    baseStats.kpis.compliantPackages.value = compliant;
+    baseStats.kpis.violationsFlagged.value = fails;
+    baseStats.kpis.nationalCompliance.value = compRate;
+    
+    baseStats.breakdown.compliant = compliant;
+    baseStats.breakdown.violations = fails;
+    
+    let violCounts = {};
+    state.inspections.forEach(r => {
+        (r.violations || []).forEach(v => {
+            let rule = v.split(":")[0] || v;
+            violCounts[rule] = (violCounts[rule] || 0) + 1;
+        });
+    });
+    
+    let sortedV = Object.entries(violCounts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e => ({type: e[0], count: e[1]}));
+    if (sortedV.length > 0) {
+        baseStats.violationBreakdown = sortedV;
+    } else {
+        baseStats.violationBreakdown = [{type: "No violations detected", count: 0}];
+    }
+    
+    state.stats = baseStats;
   }
 
-  /* ---------------------------------------------------------------- loader */
+
+  /* ---------------------------------------------------------------- Settings & Auth */
+  
+  /* ---------------------------------------------------------------- Auth & Translations */
+
+  
+  let isAdmin = true;
+
+    function triggerGoogleTranslate(lang) {
+    let attempts = 0;
+    const interval = setInterval(() => {
+      const combo = document.querySelector('.goog-te-combo');
+      if (combo) {
+        combo.value = lang;
+        combo.dispatchEvent(new Event('change'));
+        clearInterval(interval);
+      }
+      attempts++;
+      if (attempts > 20) clearInterval(interval); // Give up after 10 seconds
+    }, 500);
+  }
+
+  function handleLogout() {
+    sessionStorage.removeItem("parakh_admin");
+    window.location.href = "login.html";
+  }
+
+  function attachAuthEvents() {
+    const btnSet = document.getElementById("btnSettings");
+    if (btnSet) {
+      btnSet.addEventListener("click", () => {
+        document.getElementById("settingsBackdrop").classList.add("show");
+        icons();
+      });
+    }
+
+    const btnClose = document.getElementById("settingsClose");
+    if (btnClose) {
+      btnClose.addEventListener("click", () => document.getElementById("settingsBackdrop").classList.remove("show"));
+    }
+
+    document.getElementById("btnLogout")?.addEventListener("click", handleLogout);
+
+    const savedLang = localStorage.getItem("parakh_lang") || 'en';
+    
+    // Set radio buttons correctly
+    document.querySelectorAll("input[name='lang']").forEach(r => {
+      if (r.value === savedLang) r.checked = true;
+      
+      r.addEventListener("change", (e) => {
+         const newLang = e.target.value;
+         localStorage.setItem("parakh_lang", newLang);
+         
+         // Clear Google cookies if switching back to EN
+         if (newLang === 'en') {
+             document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+             document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=.${location.hostname}; path=/;`;
+             window.location.reload();
+         } else {
+             triggerGoogleTranslate('hi');
+         }
+      });
+    });
+
+    // Auto-trigger if Hindi was saved
+    if (savedLang === 'hi') {
+        setTimeout(() => triggerGoogleTranslate('hi'), 500);
+    }
+  }
+
+
+/* ---------------------------------------------------------------- loader */
   function runLoader() {
     return new Promise((resolve) => {
       const lines = $$("#loaderTerm [data-line]");
@@ -1094,7 +1262,7 @@
         <td>
           <div class="row-actions">
             <button class="clay-btn clay-btn--ghost clay-btn--sm" data-view="${r.id}">View</button>
-            <button class="clay-icon" style="width:34px;height:34px;border-radius:10px" data-download="${r.id}" aria-label="Download report ${r.id}"><i data-lucide="download"></i></button>
+            <button class="clay-btn clay-btn--ghost clay-btn--sm" style="color:#0891b2; font-weight:700" data-download="${r.id}"><i data-lucide="file-down" style="width:14px;height:14px"></i> PDF</button>
           </div>
         </td>
       </tr>`).join("");
@@ -1134,13 +1302,12 @@
 
   /* ---------------------------------------------------------------- activity */
   function seedActivity() {
-    const src = state.inspections.slice(0, 5);
+    const src = state.inspections.slice(0, 10);
     state.activity = [];
     src.forEach((r) => {
       if (r.status === "FAIL") pushActivity({ tone: "bad", text: `Violation flagged on ${r.id}`, sub: `${r.violations[0] || "Compliance issue"} · ${r.location}`, ts: r.timestamp }, true);
       else pushActivity({ tone: "ok", text: `Inspection ${r.id} completed`, sub: `${r.product} · ${r.location}`, ts: r.timestamp }, true);
     });
-    pushActivity({ tone: "info", text: "Compliance report generated", sub: "National summary · today", ts: Date.now() - 9 * 60000 }, true);
     state.activity.sort((a, b) => b.ts - a.ts);
     renderActivity();
   }
@@ -1246,6 +1413,13 @@
         <div class="v">${escapeHtml(r.manufacturer.name)}</div>
         <div class="text-dim" style="font-size:0.8rem;margin-top:0.15rem">${escapeHtml(r.manufacturer.address)}</div>
       </div>
+      
+      ${r.image_path ? `
+      <div style="margin-bottom: 1.5rem;">
+        <div class="eyebrow" style="margin-bottom: 0.5rem">Scanned Evidence</div>
+        <img src="${r.image_path}" style="max-width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border);" alt="Scanned Product" />
+      </div>
+      ` : ''}
 
       <div class="eyebrow" style="margin-bottom:0.6rem">Declaration Checks</div>
       ${checks}
@@ -1269,41 +1443,87 @@
     toast({ tone: "success", title: "Report generated", msg: `Inspection ${r.id} report downloaded.` });
   }
 
-  function buildReportHTML(r) {
+    function buildReportHTML(r) {
     const rows = r.checks.map((c) => `<tr><td>${escapeHtml(c.label)}</td><td class="${c.status === "PASS" ? "ok" : "bad"}">${c.status}</td></tr>`).join("");
-    const viol = r.violations.length ? r.violations.map((v) => `<li>${escapeHtml(v)}</li>`).join("") : "<li>None — all mandatory declarations present.</li>";
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>MetrologyLens Report ${r.id}</title>
+    const viol = r.violations.length ? r.violations.map((v) => `<li class="bad">${escapeHtml(v)}</li>`).join("") : "<li class='ok'>No violations detected — all mandatory declarations present.</li>";
+    const imgHtml = r.image_path ? `<div style="text-align:center; margin-top:16px; margin-bottom:16px"><img src="${r.image_path}" style="max-width:100%; max-height:450px; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05)"></div>` : "";
+    
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Parakh Inspection Report ${r.id}</title>
       <style>
-        body{font-family:Arial,Helvetica,sans-serif;color:#1b2733;max-width:760px;margin:32px auto;padding:0 24px;line-height:1.5}
-        .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0d7a54;padding-bottom:14px}
-        h1{font-size:20px;margin:0;color:#0d7a54} .sub{color:#667;font-size:12px}
-        h2{font-size:14px;margin:26px 0 8px;text-transform:uppercase;letter-spacing:.06em;color:#0d7a54}
-        table{width:100%;border-collapse:collapse;font-size:14px} td,th{border:1px solid #dde3ea;padding:8px 10px;text-align:left}
-        .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px}
-        .grid div{border:1px solid #dde3ea;border-radius:6px;padding:8px 10px} .k{color:#889;font-size:11px;text-transform:uppercase}
-        .ok{color:#0d7a54;font-weight:700} .bad{color:#c0392b;font-weight:700}
-        .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px}
-        .p{background:#e4f7ef;color:#0d7a54} .f{background:#fdeaea;color:#c0392b}
-        .print{margin-top:24px}.print button{background:#0d7a54;color:#fff;border:0;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:14px}
-        @media print{.print{display:none}}
-      </style></head><body>
-      <div class="hd"><div><h1>MetrologyLens AI — Inspection Report</h1><div class="sub">Department of Consumer Affairs • Legal Metrology • Prototype</div></div>
-        <span class="badge ${r.status === "PASS" ? "p" : "f"}">${r.status}</span></div>
-      <h2>Summary</h2>
-      <div class="grid">
-        <div><div class="k">Inspection ID</div>${r.id}</div>
-        <div><div class="k">Compliance Score</div>${r.complianceScore} / 100</div>
-        <div><div class="k">Product</div>${escapeHtml(r.product)} (${escapeHtml(r.category)})</div>
-        <div><div class="k">Net Quantity</div>${escapeHtml(r.quantity)}</div>
-        <div><div class="k">MRP</div>₹${r.mrp}</div>
-        <div><div class="k">Location</div>${escapeHtml(r.location)}</div>
-        <div><div class="k">Manufacturer</div>${escapeHtml(r.manufacturer.name)}</div>
-        <div><div class="k">Inspected</div>${new Date(r.timestamp).toLocaleString("en-IN")}</div>
+        body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;color:#1e293b;max-width:800px;margin:40px auto;padding:0 32px;line-height:1.6}
+        .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0891b2;padding-bottom:20px; margin-bottom:28px}
+        h1{font-size:26px;margin:0;color:#0f172a; font-weight:800; letter-spacing: 0.02em} .sub{color:#64748b;font-size:14px; margin-top:6px; font-weight:500}
+        h2{font-size:16px;margin:36px 0 16px;text-transform:uppercase;letter-spacing:.08em;color:#0f172a; border-bottom:1px solid #e2e8f0; padding-bottom:8px}
+        table{width:100%;border-collapse:collapse;font-size:14px; margin-bottom:20px} 
+        td,th{border:1px solid #e2e8f0;padding:12px 16px;text-align:left}
+        th{background-color:#f8fafc; color:#334155; font-weight:700}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:14px}
+        .grid div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px} .k{color:#64748b;font-size:11px;text-transform:uppercase; font-weight:700; margin-bottom:6px}
+        .v{font-weight: 600; font-size:15px; color:#0f172a}
+        .ok{color:#16a34a;font-weight:700} .bad{color:#dc2626;font-weight:700}
+        .badge{display:inline-block;padding:6px 14px;border-radius:999px;font-weight:700;font-size:13px}
+        .p{background:#dcfce7;color:#16a34a; border: 1px solid #bbf7d0} .f{background:#fee2e2;color:#dc2626; border: 1px solid #fecaca}
+        .print{margin-top:40px; text-align:center}.print button{background:#0891b2;color:#fff;border:0;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:15px; font-weight:600; box-shadow:0 4px 6px rgba(8,145,178,0.2)}
+        .print button:hover{background:#06b6d4}
+        .footer{margin-top:60px; text-align:center; font-size:12px; color:#94a3b8; border-top:1px solid #e2e8f0; padding-top:24px}
+        @media print{
+            .print{display:none}
+            body { margin: 0; padding: 20px; }
+            .grid div { break-inside: avoid; }
+        }
+    
+    .error { color: var(--danger); font-size: 0.85rem; margin-top: 1rem; font-weight: 600; display: none; }
+    
+    /* Hide Google Translate UI */
+    body { top: 0 !important; position: static !important; }
+    .skiptranslate { display: none !important; }
+    .goog-te-banner-frame { display: none !important; }
+  </style>
+</head><body>
+
+
+
+
+      <div class="hd">
+        <div>
+          <h1 style="color:#0891b2">PARAKH (परख)</h1>
+          <div class="sub">National Legal Metrology Monitoring Portal<br>Official Inspection Report</div>
+        </div>
+        <div style="text-align:right">
+           <div style="font-size:11px; color:#64748b; font-weight:700; margin-bottom:6px; text-transform:uppercase">Inspection Status</div>
+           <span class="badge ${r.status === "PASS" ? "p" : "f"}">${r.status === "PASS" ? "COMPLIANT (पास)" : "VIOLATION DETECTED (फेल)"}</span>
+        </div>
       </div>
-      <h2>Declaration Checks</h2>
-      <table><thead><tr><th>Declaration</th><th>Result</th></tr></thead><tbody>${rows}</tbody></table>
-      <h2>Violations</h2><ul>${viol}</ul>
-      <div class="print"><button onclick="window.print()">Print / Save as PDF</button></div>
+      
+      <h2>Inspection Summary</h2>
+      <div class="grid">
+        <div><div class="k">Inspection ID</div><div class="v" style="font-family:monospace">${r.id}</div></div>
+        <div><div class="k">Compliance Score</div><div class="v">${r.complianceScore} / 100</div></div>
+        <div><div class="k">Scan Location</div><div class="v">${escapeHtml(r.location)}</div></div>
+        <div><div class="k">Date & Time</div><div class="v">${new Date(r.timestamp).toLocaleString("en-IN", {dateStyle:"long", timeStyle:"medium"})}</div></div>
+      </div>
+
+      <h2>Product Details</h2>
+      <div class="grid">
+        <div><div class="k">Product Type</div><div class="v">${escapeHtml(r.product)} (${escapeHtml(r.category)})</div></div>
+        <div><div class="k">Declared Net Quantity</div><div class="v">${escapeHtml(r.quantity)}</div></div>
+        <div><div class="k">Declared MRP</div><div class="v">₹ ${r.mrp}</div></div>
+        <div><div class="k">Manufacturer / Packer</div><div class="v">${escapeHtml(r.manufacturer.name)}<br><span style="font-size:12px; font-weight:500; color:#64748b; margin-top:4px; display:inline-block">${escapeHtml(r.manufacturer.address)}</span></div></div>
+      </div>
+      
+      ${r.image_path ? `<h2>Scanned Evidence</h2>${imgHtml}` : ''}
+
+      <h2>Rule Compliance Checks</h2>
+      <table><thead><tr><th>Mandatory Declaration</th><th>AI Verification Status</th></tr></thead><tbody>${rows}</tbody></table>
+      
+      <h2>Identified Violations</h2>
+      <ul style="line-height:1.8">${viol}</ul>
+      
+      <div class="footer">
+        Generated securely by Parakh AI System on ${new Date().toLocaleString("en-IN")}.<br>
+        This is a digitally generated document intended for Legal Metrology enforcement workflows.
+      </div>
+      <div class="print"><button onclick="window.print()">🖨️ Print / Save as PDF</button></div>
       </body></html>`;
   }
 
@@ -1348,23 +1568,43 @@
     if (highlight) toast({ tone: rec.status === "PASS" ? "success" : "danger", title: "New inspection", msg: `${rec.id} · ${rec.product} — ${rec.status}` });
   }
 
+  async function pollRealAPI() {
+    if (!state.live) return;
+    const oldLen = state.inspections ? state.inspections.length : 0;
+    await loadData();
+    const newLen = state.inspections ? state.inspections.length : 0;
+    
+    if (newLen > oldLen) {
+      applyFilters();
+      renderTable({ animate: true });
+      renderKPIs();
+      renderViolations();
+      seedActivity();
+      renderCharts();
+      toast({ tone: "success", title: "New scan detected!", msg: "Latest inspection received from mobile app." });
+    }
+    
+    state.liveTimer = setTimeout(pollRealAPI, 3000);
+  }
+
   function scheduleLive() {
     if (!state.live) return;
-    const delay = 5000 + Math.random() * 3000; // 5â€“8s
-    state.liveTimer = setTimeout(() => { addLiveInspection(true); scheduleLive(); }, delay);
+    state.liveTimer = setTimeout(pollRealAPI, 3000);
   }
 
   function setLive(on) {
     state.live = on;
-    $("#liveToggle").checked = on;
+    const tg = $("#liveToggle"); if (tg) tg.checked = on;
     const m = $("#liveToggleMobile"); if (m) m.checked = on;
-    $("#offlinePill").classList.toggle("show", !on);
-    $("#navStatus").innerHTML = on
-      ? `<span class="dot dot-pulse"></span> Live Monitoring`
-      : `<span class="dot dot-pulse"></span> System Online`;
+    const op = $("#offlinePill"); if (op) op.classList.toggle("show", !on);
+    const ns = $("#navStatus"); if (ns) {
+      ns.innerHTML = on
+        ? `<span class="dot dot-pulse"></span> Live Monitoring`
+        : `<span class="dot dot-pulse"></span> System Online`;
+    }
     clearTimeout(state.liveTimer);
-    if (on) { scheduleLive(); toast({ tone: "info", title: "Live simulation on", msg: "New inspections will stream in automatically." }); }
-    else toast({ tone: "warn", title: "Live simulation paused", msg: "Automatic updates are off." });
+    if (on) { scheduleLive(); toast({ tone: "info", title: "Live Sync On", msg: "Scanning database for new real-time updates." }); }
+    else toast({ tone: "warn", title: "Live Sync Paused", msg: "Automatic updates are off." });
   }
 
   /* ---------------------------------------------------------------- feed error state */
@@ -1377,16 +1617,20 @@
   function hideFeedError() { $("#feedError").classList.remove("show"); applyFilters(); }
 
   /* ---------------------------------------------------------------- refresh */
-  function refreshFeed() {
+  async function refreshFeed() {
     const btn = $("#refreshBtn");
     const ic = btn.querySelector("svg") || btn.querySelector("i");
     if (ic && !RM) { ic.style.transition = "transform 0.7s ease"; ic.style.transform = "rotate(360deg)"; setTimeout(() => (ic.style.transform = ""), 720); }
-    const n = 1 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < n; i++) addLiveInspection(false);
+    
+    // Fetch real data from FastAPI
+    await loadData();
     state.visible = INITIAL_VISIBLE;
-    applyFilters();
     renderTable({ animate: true });
-    toast({ tone: "success", title: "Feed refreshed", msg: `${n} new inspection${n > 1 ? "s" : ""} received.` });
+    renderKPIs();
+    renderViolations();
+    seedActivity();
+    renderCharts();
+    toast({ tone: "success", title: "Feed refreshed", msg: "Latest inspections fetched from server." });
   }
 
   /* ---------------------------------------------------------------- events */
