@@ -45,7 +45,7 @@ Packaged commodities sold across India in retail and e-commerce platforms must c
 
 ## 📁 Repository Structure
 
-`
+
 Parakh/
 ├── backend/                                       # ⚡ FastAPI Backend Engine
 │   ├── main.py                                    # REST API Gateway (/api/scan, /api/history)
@@ -68,7 +68,7 @@ Parakh/
 ├── SIH2026-IDEA-Presentation-Format.pdf           # Original SIH PDF Template
 ├── .gitignore                                     # Clean Git Ignore Config
 └── README.md                                      # Project Documentation
-`
+
 
 ---
 
